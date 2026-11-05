@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบติดตามและวิเคราะห์ต้นทุนกระดาษ & ของเสีย (ครบทุกส่วนงาน)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Sarabun', sans-serif;
+    }
+    .badge-good {
+      background-color: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+    .badge-bad {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    .tab-active {
+      border-bottom: 3px solid #2563eb;
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <!-- Top Navbar -->
+  <header class="bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-950 text-white shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-blue-600/80 rounded-xl shadow-inner border border-blue-400/30">
+          <i data-lucide="line-chart" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">Paper Cost & Department Waste Analytics</h1>
+          <p class="text-xs text-blue-200">ระบบติดตามและวิเคราะห์ผลงานเทียบเป้าหมาย (Actual vs Target) ครบทั้ง 8 ส่วนงาน</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openModal('addModal')" class="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-medium rounded-lg shadow-sm transition">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> เพิ่มสัปดาห์ใหม่ (Week)
+        </button>
+        <button onclick="exportCSV()" class="flex items-center gap-1.5 px-3.5 py-2 bg-blue-800/80 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg border border-blue-600/50 transition">
+          <i data-lucide="download" class="w-4 h-4"></i> ส่งออก CSV
+        </button>
+        <button onclick="resetDefaultData()" title="คืนค่าข้อมูลเริ่มต้น" class="p-2 hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex items-start justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">มูลค่าของเสียรวม (สะสม)</p>
+          <h3 id="kpiTotalWasteVal" class="text-2xl font-bold text-slate-900 mt-1">฿0.00</h3>
+          <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+            <span id="kpiWasteWeight" class="font-semibold text-slate-700">0 กก.</span> (รวม 5 สัปดาห์)
+          </p>
+        </div>
+        <div class="p-3 bg-amber-50 rounded-xl text-amber-600">
+          <i data-lucide="trash-2" class="w-6 h-6"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex items-start justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">มูลค่าสูญเสียเกินเป้า (Loss)</p>
+          <h3 id="kpiTotalExcess" class="text-2xl font-bold text-rose-600 mt-1">฿0.00</h3>
+          <p id="kpiExcessRate" class="text-xs text-rose-500 mt-1 font-medium flex items-center gap-1">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> คิดเป็น 21.0% ของเสียทั้งหมด
+          </p>
+        </div>
+        <div class="p-3 bg-rose-50 rounded-xl text-rose-600">
+          <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex items-start justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">% Paper Cost เฉลี่ย</p>
+          <h3 id="kpiAvgPaperCost" class="text-2xl font-bold text-slate-900 mt-1">0.00%</h3>
+          <p id="kpiPaperCostStatus" class="text-xs mt-1 font-medium flex items-center gap-1">
+            เป้าหมาย: 79.02%
+          </p>
+        </div>
+        <div class="p-3 bg-blue-50 rounded-xl text-blue-600">
+          <i data-lucide="percent" class="w-6 h-6"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex items-start justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">ส่วนงานที่เกินเป้าสูงสุด (Critical)</p>
+          <h3 id="kpiTopCulprit" class="text-lg font-bold text-slate-900 mt-1 truncate max-w-[180px]">Diff Waste</h3>
+          <p id="kpiTopCulpritVal" class="text-xs text-rose-600 font-semibold mt-1">฿4.7M+ (เกินเป้าทุกสัปดาห์)</p>
+        </div>
+        <div class="p-3 bg-purple-50 rounded-xl text-purple-600">
+          <i data-lucide="target" class="w-6 h-6"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="border-b border-slate-200 flex space-x-6 text-sm font-medium">
+      <button onclick="switchTab('deptCharts')" id="tabBtn-deptCharts" class="tab-active py-3 px-1 transition flex items-center gap-2">
+        <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i> กราฟแยกรายส่วนงานครบ 8 หน่วยงาน (Actual vs Target)
+      </button>
+      <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> แดชบอร์ดภาพรวม (Overview)
+      </button>
+      <button onclick="switchTab('weekly')" id="tabBtn-weekly" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+        <i data-lucide="calendar" class="w-4 h-4"></i> ตารางเจาะลึกรายสัปดาห์ (Weekly Drill-down)
+      </button>
+      <button onclick="switchTab('rawdata')" id="tabBtn-rawdata" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+        <i data-lucide="table" class="w-4 h-4"></i> ข้อมูลดิบ & บันทึกเพิ่ม (Data Records)
+      </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB: DEPARTMENT DEEP-DIVE (ALL 8 TOPICS)   -->
+    <!-- ========================================== -->
+    <div id="tabContent-deptCharts" class="space-y-6">
+      
+      <!-- Section Banner -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-900 to-blue-900 text-white p-5 rounded-2xl shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h3 class="text-base font-bold flex items-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-300"></i> กราฟติดตามและเปรียบเทียบผลงานแยกตามส่วนงาน (Actual vs Target) ครบทั้ง 8 ส่วนงาน
+          </h3>
+          <p class="text-xs text-indigo-200 mt-1">แสดงผลเปรียบเทียบผลงานจริงเทียบเส้นเป้าหมายต่อเนื่องทุกสัปดาห์ พร้อมระบุชื่อผู้รับผิดชอบอย่างชัดเจน</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <span class="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg border border-white/20">
+            <span class="w-3.5 h-0.5 bg-rose-400 border-b-2 border-dashed border-rose-400 inline-block"></span> เส้นประแดง = เป้าหมาย (Target)
+          </span>
+          <span class="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg border border-white/20">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span> เขียว = ผ่านเป้าหมาย
+          </span>
+          <span class="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg border border-white/20">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> แดง = เกินเป้าหมาย (ต้องปรับปรุง)
+          </span>
+        </div>
+      </div>
+
+      <!-- 8 Individual Department Cards Grid (4 columns on xl screens) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+
+        <!-- 1. ราคาซื้อ / จัดซื้อ (ภัทร / พลอย) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">จัดซื้อ / ควบคุมต้นทุน</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">1. ราคาซื้อ / จัดซื้อ</h4>
+                <p class="text-xs text-slate-500">ผู้รับผิดชอบ: <span class="font-semibold text-slate-700">ภัทร / พลอย</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400">เป้าหมาย</span>
+                <p class="text-xs font-bold text-slate-700">18.30 ฿</p>
+              </div>
+            </div>
+            <div class="h-40 mt-2">
+              <canvas id="deptChartBuyPrice"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px]">
+            <span class="text-slate-500">เฉลี่ย: <strong class="text-emerald-700">18.20 ฿</strong></span>
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-semibold">✓ ผ่านเกณฑ์ทุก Week</span>
+          </div>
+        </div>
+
+        <!-- 2. ราคาขาย / ตลาด (พี่หญิง / เนย) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded">ฝ่ายขาย / ตลาด</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">2. ราคาขาย / ตลาด</h4>
+                <p class="text-xs text-slate-500">ผู้รับผิดชอบ: <span class="font-semibold text-slate-700">พี่หญิง / เนย</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400">เป้าหมาย</span>
+                <p class="text-xs font-bold text-slate-700">25.70 ฿</p>
+              </div>
+            </div>
+            <div class="h-40 mt-2">
+              <canvas id="deptChartSellPrice"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px]">
+            <span class="text-slate-500">เฉลี่ย: <strong class="text-amber-700">25.37 ฿</strong></span>
+            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-semibold">หลุดเป้า -0.33 ฿</span>
+          </div>
+        </div>
+
+        <!-- 3. % Paper Cost (ทุกแผนก) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded">ต้นทุนหลัก</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">3. % Paper Cost</h4>
+                <p class="text-xs text-slate-500">ผู้รับผิดชอบ: <span class="font-semibold text-slate-700">ทุกแผนก</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400">เป้าหมาย</span>
+                <p class="text-xs font-bold text-slate-700">79.02%</p>
+              </div>
+            </div>
+            <div class="h-40 mt-2">
+              <canvas id="deptChartPaperCost"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px]">
+            <span class="text-slate-500">เฉลี่ย: <strong class="text-rose-600">81.23%</strong></span>
+            <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-semibold">เกินเป้า +2.21%</span>
+          </div>
+        </div>
+
+        <!-- 4. Waste / Production (ดล / ปัญญา / อาทร์) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">ฝ่ายผลิต</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">4. Waste / Production</h4>
+                <p class="text-xs text-slate-500">ผู้รับผิดชอบ: <span class="font-semibold text-slate-700">ดล / ปัญญา / อาทร์</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400">เป้าหมาย</span>
+                <p class="text-xs font-bold text-slate-700">5.00%</p>
+              </div>
+            </div>
+            <div class="h-40 mt-2">
+              <canvas id="deptChartProd"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px]">
+            <span class="text-slate-500">เฉลี่ย: <strong class="text-emerald-700">4.72%</strong></span>
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-semibold">✓ ผ่าน 4/5 สัปดาห์</span>
+          </div>
+        </div>
+
+        <!-- 5. Waste / Planning (พี่เก่ง / ปลา) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">ฝ่ายวางแผน</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">5. Waste / Planning</h4>
+                <p class="text-xs text-slate-500">ผู้รับผิดชอบ: <span class="font-semibold text-slate-700">พี่เก่ง / ปลา</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400">เป้าหมาย</span>
+                <p class="text-xs font-bold text-slate-700">3.50%</p>
+              </div>
+            </div>
+            <div class="h-40 mt-2">
+              <canvas id="deptChartPlan"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px]">
+            <span class="text-slate-500">เฉลี่ย: <strong class="text-emerald-700">3.38%</strong></span>
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-semibold">✓ ผ่าน 4/5 สัปดาห์</span>
+          </div>
+        </div>
+
+        <!-- 6. Waste / RM วัตถุดิบ (พี่ไก่ / แบม) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-rose-200 hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-pink-600 bg-pink-50 px-2 py-0.5 rounded">วัตถุดิบเสียหาย</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">6. Waste / RM</h4>
+                <p class="text-xs text-slate-500">ผู้รับผิดชอบ: <span class="font-semibold text-slate-700">พี่ไก่ / แบม</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400">เป้าหมาย</span>
+                <p class="text-xs font-bold text-slate-700">1.58%</p>
+              </div>
+            </div>
+            <div class="h-40 mt-2">
+              <canvas id="deptChartRM"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px]">
+            <span class="text-slate-500">เฉลี่ย: <strong class="text-rose-600">1.85%</strong></span>
+            <span class="text-rose-600 font-semibold">Loss: ฿382k</span>
+          </div>
+        </div>
+
+        <!-- 7. Waste / Marketing (ส้ม / เตย) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">การตลาด</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">7. Waste / Marketing</h4>
+                <p class="text-xs text-slate-500">ผู้รับผิดชอบ: <span class="font-semibold text-slate-700">ส้ม / เตย</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400">เป้าหมาย</span>
+                <p class="text-xs font-bold text-slate-700">0.04%</p>
+              </div>
+            </div>
+            <div class="h-40 mt-2">
+              <canvas id="deptChartMkt"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px]">
+            <span class="text-slate-500">เฉลี่ย: <strong class="text-emerald-700">0.013%</strong></span>
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-semibold">✓ ผ่านเกณฑ์ทุก Week</span>
+          </div>
+        </div>
+
+        <!-- 8. Diff Waste (นุ่น / พี่ไก่) - CRITICAL -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border-2 border-rose-300 hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100 px-2 py-0.5 rounded">⚠️ วิกฤตสูญเสียสูงสุด</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">8. Diff Waste</h4>
+                <p class="text-xs text-slate-500">ผู้รับผิดชอบ: <span class="font-semibold text-slate-700">นุ่น / พี่ไก่</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400">เป้าหมาย</span>
+                <p class="text-xs font-bold text-slate-700">0.86%</p>
+              </div>
+            </div>
+            <div class="h-40 mt-2">
+              <canvas id="deptChartDiff"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px]">
+            <span class="text-slate-500">เฉลี่ย: <strong class="text-rose-600">1.48%</strong></span>
+            <span class="text-rose-600 font-bold">Loss: ฿4,732,877</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Comparative Summary Breakdown: Stacked Values by Department -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h4 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="bar-chart" class="w-4 h-4 text-indigo-600"></i> เปรียบเทียบมูลค่าของเสียทุกหน่วยงานในแต่ละสัปดาห์ (Stacked Waste Value Breakdown)
+            </h4>
+            <p class="text-xs text-slate-400">ช่วยระบุว่าในแต่ละสัปดาห์ ส่วนงานใดคิดเป็นเม็ดเงินการสูญเสียมากที่สุด</p>
+          </div>
+          <div class="text-xs font-semibold text-slate-600 flex gap-4">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-indigo-500"></span> Diff Waste</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500"></span> Production</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-500"></span> Planning</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-pink-500"></span> RM</span>
+          </div>
+        </div>
+        <div class="h-56">
+          <canvas id="deptChartStacked"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB: OVERVIEW DASHBOARD                    -->
+    <!-- ========================================== -->
+    <div id="tabContent-dashboard" class="space-y-6 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="trending-up" class="w-4 h-4 text-blue-600"></i> แนวโน้ม % Paper Cost รวม vs เป้าหมาย (79.02%)
+            </h3>
+            <span class="text-xs px-2.5 py-1 rounded bg-blue-50 text-blue-700 font-semibold">ยิ่งต่ำยิ่งดี</span>
+          </div>
+          <div class="h-64"><canvas id="paperCostChart"></canvas></div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="bar-chart-3" class="w-4 h-4 text-rose-600"></i> มูลค่าของเสียรวม vs ส่วนเกินเป้าหมาย (Loss)
+            </h3>
+            <span class="text-xs px-2.5 py-1 rounded bg-rose-50 text-rose-700 font-semibold">Loss สะสม ฿5.18M</span>
+          </div>
+          <div class="h-64"><canvas id="wasteValueChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+          <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2 mb-1">
+            <i data-lucide="pie-chart" class="w-4 h-4 text-amber-500"></i> สัดส่วนมูลค่าของเสียแยกตามแผนก
+          </h3>
+          <p class="text-xs text-slate-400 mb-3">สะสมทั้ง 5 สัปดาห์ (Week 40-44)</p>
+          <div class="h-52 relative flex items-center justify-center">
+            <canvas id="wastePieChart"></canvas>
+          </div>
+          <div id="pieLegend" class="mt-3 text-xs space-y-1.5 border-t border-slate-100 pt-3"></div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="dollar-sign" class="w-4 h-4 text-emerald-600"></i> ติดตามราคาซื้อวัตถุดิบ vs ราคาขายเฉลี่ย (บาท/กก.)
+            </h3>
+          </div>
+          <div class="h-64"><canvas id="priceChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB: WEEKLY DRILL-DOWN VIEW                -->
+    <!-- ========================================== -->
+    <div id="tabContent-weekly" class="space-y-6 hidden">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <label for="weekSelect" class="text-sm font-semibold text-slate-700">เลือกสัปดาห์ที่ต้องการเจาะลึก:</label>
+          <select id="weekSelect" onchange="renderWeeklyDetail()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+          <span id="weekDateLabel" class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">ช่วงวันที่ 01-04/10/2026</span>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-medium">
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> ผ่านเป้าหมาย</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> เกินเป้าหมาย (ต้องปรับปรุง)</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+            <i data-lucide="clipboard-check" class="w-4 h-4 text-blue-600"></i> รายละเอียดผลการดำเนินงานเทียบเป้าหมายประจำสัปดาห์
+          </h3>
+          <span id="weekCulpritsBadge" class="text-xs px-2.5 py-1 bg-rose-50 text-rose-700 font-semibold rounded-full border border-rose-200">
+            เกินเป้า 0 หัวข้อ
+          </span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">หัวข้อตัวชี้วัด</th>
+                <th class="py-3 px-4">ผู้รับผิดชอบ</th>
+                <th class="py-3 px-4 text-right">เป้าหมาย (Target)</th>
+                <th class="py-3 px-4 text-right">ผลงานจริง (Actual)</th>
+                <th class="py-3 px-4 text-right">ผลต่าง</th>
+                <th class="py-3 px-4 text-center">สถานะ</th>
+                <th class="py-3 px-4 text-right">น้ำหนักของเสีย (กก.)</th>
+                <th class="py-3 px-4 text-right">มูลค่าของเสีย (บาท)</th>
+                <th class="py-3 px-4 text-right text-rose-600 font-bold">มูลค่าส่วนเกินเป้า (บาท)</th>
+              </tr>
+            </thead>
+            <tbody id="weeklyTableBody" class="divide-y divide-slate-100"></tbody>
+            <tfoot class="bg-slate-50 font-bold border-t border-slate-200">
+              <tr>
+                <td colspan="6" class="py-3 px-4 text-right text-slate-700">รวมของเสียสัปดาห์นี้:</td>
+                <td id="weekTotalKg" class="py-3 px-4 text-right text-slate-900">0</td>
+                <td id="weekTotalVal" class="py-3 px-4 text-right text-slate-900">฿0.00</td>
+                <td id="weekTotalExcess" class="py-3 px-4 text-right text-rose-600">฿0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-amber-50/60 border border-amber-200 rounded-2xl p-5">
+        <h4 class="font-bold text-amber-900 text-sm flex items-center gap-2 mb-2">
+          <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600"></i> การวิเคราะห์และสาเหตุสำคัญประจำสัปดาห์ (Weekly Diagnosis)
+        </h4>
+        <div id="weeklyDiagnosisList" class="space-y-2 text-xs text-amber-800"></div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB: RAW DATA & MANAGEMENT                 -->
+    <!-- ========================================== -->
+    <div id="tabContent-rawdata" class="space-y-6 hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="database" class="w-4 h-4 text-indigo-600"></i> ตารางบันทึกข้อมูลรายสัปดาห์ (ฝ่ายโรงงาน)
+            </h3>
+            <p class="text-xs text-slate-400">แสดงข้อมูลทุกสัปดาห์ สามารถกดแก้ไขหรือลบรายการได้</p>
+          </div>
+          <button onclick="openModal('addModal')" class="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow-sm">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> เพิ่มรายการ
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">Week</th>
+                <th class="py-3 px-3">วันที่</th>
+                <th class="py-3 px-3 text-right">ราคาซื้อ</th>
+                <th class="py-3 px-3 text-right">ราคาขาย</th>
+                <th class="py-3 px-3 text-right">% Paper Cost</th>
+                <th class="py-3 px-3 text-right">Production</th>
+                <th class="py-3 px-3 text-right">Planning</th>
+                <th class="py-3 px-3 text-right">RM</th>
+                <th class="py-3 px-3 text-right">Diff Waste</th>
+                <th class="py-3 px-3 text-right font-bold text-rose-600">ส่วนเกินเป้า</th>
+                <th class="py-3 px-3 text-right font-bold">มูลค่ารวม</th>
+                <th class="py-3 px-3 text-center">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="rawDataTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: ADD / EDIT WEEK -->
+  <div id="addModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h3 id="modalTitle" class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="calendar-plus" class="w-5 h-5 text-blue-600"></i> บันทึกข้อมูลประจำสัปดาห์ใหม่
+        </h3>
+        <button onclick="closeModal('addModal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="weekForm" onsubmit="handleFormSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="editIndex" value="-1">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Week ที่</label>
+            <input type="number" id="inputWeek" required min="1" max="53" class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">ช่วงวันที่ (เช่น 01-07)</label>
+            <input type="text" id="inputDate" required placeholder="01-07" class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">เดือน / ปี</label>
+            <div class="flex gap-1">
+              <input type="number" id="inputMonth" required value="10" min="1" max="12" class="w-1/2 bg-slate-50 border rounded-lg p-2 text-center">
+              <input type="number" id="inputYear" required value="2026" class="w-1/2 bg-slate-50 border rounded-lg p-2 text-center">
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t pt-3 font-semibold text-slate-800 text-sm">ตัวชี้วัดราคาและต้นทุน (Targets กำหนดไว้แล้ว)</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-slate-600 mb-1">ราคาซื้อจริง (Target: 18.30)</label>
+            <input type="number" step="0.01" id="inputBuyPrice" required class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1">ราคาขายจริง (Target: 25.70)</label>
+            <input type="number" step="0.01" id="inputSellPrice" required class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1">% Paper Cost (Target: 79.02% หรือ 0.7902)</label>
+            <input type="number" step="0.0001" id="inputPaperCost" required placeholder="เช่น 0.8250" class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+        </div>
+
+        <div class="border-t pt-3 font-semibold text-slate-800 text-sm">อัตราส่วนของเสีย (Waste Actual Rate)</div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-slate-600 mb-1">Production (เป้า 0.05)</label>
+            <input type="number" step="0.0001" id="inputWasteProd" required class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1">Planning (เป้า 0.035)</label>
+            <input type="number" step="0.0001" id="inputWastePlan" required class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1">RM (เป้า 0.0158)</label>
+            <input type="number" step="0.0001" id="inputWasteRM" required class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1">Diff Waste (เป้า 0.0086)</label>
+            <input type="number" step="0.0001" id="inputDiffWaste" required class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+        </div>
+
+        <div class="border-t pt-3 font-semibold text-slate-800 text-sm">ข้อมูลผลรวมจริง (Total Value & Weight)</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-600 mb-1">มูลค่าของเสียรวม (บาท)</label>
+            <input type="number" step="0.01" id="inputTotalWasteVal" required class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1">น้ำหนักของเสียรวม (กก.)</label>
+            <input type="number" step="1" id="inputTotalWasteKg" required class="w-full bg-slate-50 border rounded-lg p-2">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4 border-t">
+          <button type="button" onclick="closeModal('addModal')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg">ยกเลิก</button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg shadow-sm">บันทึกข้อมูล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="max-w-7xl mx-auto px-4 py-6 text-center text-xs text-slate-400 border-t border-slate-200 mt-10">
+    ระบบบริหารจัดการต้นทุนกระดาษและของเสียโรงงาน (Factory Cost & Waste Tracker) • พัฒนาเพื่อการวิเคราะห์และตัดสินใจทางวิศวกรรมการผลิต
+  </footer>
+
+  <!-- Core JavaScript Logic -->
+  <script>
+    const DEFAULT_DATA = [
+      {
+        week: 40, date: "01-04", month: 10, year: 2026,
+        buyTarget: 18.3, buyActual: 18.19,
+        sellTarget: 25.7, sellActual: 25.53,
+        paperCostTarget: 0.7902, paperCostActual: 0.7501,
+        wasteProdTarget: 0.05, wasteProdActual: 0.0511, wasteProdVal: 812092.55, wasteProdKg: 44645,
+        wastePlanTarget: 0.035, wastePlanActual: 0.0377, wastePlanVal: 599214.98, wastePlanKg: 32942,
+        wasteRMTarget: 0.0158, wasteRMActual: 0.0181, wasteRMVal: 451093.81, wasteRMKg: 24799,
+        wasteMktTarget: 0.0004, wasteMktActual: 0.00035, wasteMktVal: 5620.71, wasteMktKg: 309,
+        diffWasteTarget: 0.0086, diffWasteActual: 0.0166, diffWasteVal: 1662766.09, diffWasteKg: 91411,
+        totalWasteVal: 3530788.14,
+        totalExcessVal: 919050.41,
+        totalWasteKg: 194106,
+        excessCount: 4
+      },
+      {
+        week: 41, date: "05-11", month: 10, year: 2026,
+        buyTarget: 18.3, buyActual: 18.20,
+        sellTarget: 25.7, sellActual: 25.50,
+        paperCostTarget: 0.7902, paperCostActual: 0.8533,
+        wasteProdTarget: 0.05, wasteProdActual: 0.0466, wasteProdVal: 1392955.20, wasteProdKg: 76536,
+        wastePlanTarget: 0.035, wastePlanActual: 0.0332, wastePlanVal: 991335.80, wastePlanKg: 54469,
+        wasteRMTarget: 0.0158, wasteRMActual: 0.0190, wasteRMVal: 560960.40, wasteRMKg: 30822,
+        wasteMktTarget: 0.0004, wasteMktActual: 0.00018, wasteMktVal: 5278.00, wasteMktKg: 290,
+        diffWasteTarget: 0.0086, diffWasteActual: 0.0182, diffWasteVal: 2848118.00, diffWasteKg: 156490,
+        totalWasteVal: 5798647.40,
+        totalExcessVal: 1596781.54,
+        totalWasteKg: 318607,
+        excessCount: 2
+      },
+      {
+        week: 42, date: "12-18", month: 10, year: 2026,
+        buyTarget: 18.3, buyActual: 18.19,
+        sellTarget: 25.7, sellActual: 25.37,
+        paperCostTarget: 0.7902, paperCostActual: 0.7724,
+        wasteProdTarget: 0.05, wasteProdActual: 0.0474, wasteProdVal: 1173073.10, wasteProdKg: 64490,
+        wastePlanTarget: 0.035, wastePlanActual: 0.0329, wastePlanVal: 820423.57, wastePlanKg: 45103,
+        wasteRMTarget: 0.0158, wasteRMActual: 0.0182, wasteRMVal: 451093.81, wasteRMKg: 24799,
+        wasteMktTarget: 0.0004, wasteMktActual: 0.0, wasteMktVal: 0.0, wasteMktKg: 0,
+        diffWasteTarget: 0.0086, diffWasteActual: 0.0102, diffWasteVal: 2368028.77, diffWasteKg: 130183,
+        totalWasteVal: 4812619.25,
+        totalExcessVal: 430940.39,
+        totalWasteKg: 264575,
+        excessCount: 2
+      },
+      {
+        week: 43, date: "19-25", month: 10, year: 2026,
+        buyTarget: 18.3, buyActual: 18.16,
+        sellTarget: 25.7, sellActual: 24.95,
+        paperCostTarget: 0.7902, paperCostActual: 0.8015,
+        wasteProdTarget: 0.05, wasteProdActual: 0.0446, wasteProdVal: 1176876.96, wasteProdKg: 64806,
+        wastePlanTarget: 0.035, wastePlanActual: 0.0307, wastePlanVal: 808919.04, wastePlanKg: 44544,
+        wasteRMTarget: 0.0158, wasteRMActual: 0.0167, wasteRMVal: 438854.56, wasteRMKg: 24166,
+        wasteMktTarget: 0.0004, wasteMktActual: 0.000009, wasteMktVal: 1707.04, wasteMktKg: 94,
+        diffWasteTarget: 0.0086, diffWasteActual: 0.0160, diffWasteVal: 2485758.96, diffWasteKg: 136881,
+        totalWasteVal: 4912116.56,
+        totalExcessVal: 1173314.36,
+        totalWasteKg: 270491,
+        excessCount: 2
+      },
+      {
+        week: 44, date: "26-31", month: 10, year: 2026,
+        buyTarget: 18.3, buyActual: 18.24,
+        sellTarget: 25.7, sellActual: 25.51,
+        paperCostTarget: 0.7902, paperCostActual: 0.8840,
+        wasteProdTarget: 0.05, wasteProdActual: 0.0462, wasteProdVal: 1266768.00, wasteProdKg: 69450,
+        wastePlanTarget: 0.035, wastePlanActual: 0.0347, wastePlanVal: 951872.64, wastePlanKg: 52186,
+        wasteRMTarget: 0.0158, wasteRMActual: 0.0205, wasteRMVal: 644856.96, wasteRMKg: 35354,
+        wasteMktTarget: 0.0004, wasteMktActual: 0.00011, wasteMktVal: 3137.28, wasteMktKg: 172,
+        diffWasteTarget: 0.0086, diffWasteActual: 0.0129, diffWasteVal: 2724362.88, diffWasteKg: 149362,
+        totalWasteVal: 5590997.76,
+        totalExcessVal: 1055966.21,
+        totalWasteKg: 306524,
+        excessCount: 2
+      }
+    ];
+
+    let dataset = JSON.parse(localStorage.getItem('paper_cost_data')) || DEFAULT_DATA;
+    let charts = {};
+
+    function saveDataset() {
+      localStorage.setItem('paper_cost_data', JSON.stringify(dataset));
+    }
+
+    function resetDefaultData() {
+      if (confirm('คุณต้องการคืนค่าเป็นข้อมูลตัวอย่างเริ่มต้นใช่หรือไม่?')) {
+        dataset = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        saveDataset();
+        initApp();
+      }
+    }
+
+    // SWITCH TABS
+    function switchTab(tabId) {
+      ['deptCharts', 'dashboard', 'weekly', 'rawdata'].forEach(t => {
+        const content = document.getElementById(`tabContent-${t}`);
+        const btn = document.getElementById(`tabBtn-${t}`);
+        if (t === tabId) {
+          content.classList.remove('hidden');
+          btn.className = 'tab-active py-3 px-1 transition flex items-center gap-2';
+        } else {
+          content.classList.add('hidden');
+          btn.className = 'py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2';
+        }
+      });
+
+      if (tabId === 'deptCharts') {
+        renderDeptCharts();
+      } else if (tabId === 'dashboard') {
+        initOverviewCharts();
+      } else if (tabId === 'weekly') {
+        renderWeeklyDetail();
+      }
+    }
+
+    // NUMBER FORMATTERS
+    const fmtMoney = (n) => '฿' + Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtKg = (n) => Number(n || 0).toLocaleString('th-TH') + ' กก.';
+    const fmtPct = (n) => (Number(n || 0) * 100).toFixed(2) + '%';
+
+    // UPDATE KPIS
+    function updateKPIs() {
+      const totalWaste = dataset.reduce((s, r) => s + (r.totalWasteVal || 0), 0);
+      const totalExcess = dataset.reduce((s, r) => s + (r.totalExcessVal || 0), 0);
+      const totalKg = dataset.reduce((s, r) => s + (r.totalWasteKg || 0), 0);
+      const avgPaperCost = dataset.length ? dataset.reduce((s, r) => s + (r.paperCostActual || 0), 0) / dataset.length : 0;
+
+      document.getElementById('kpiTotalWasteVal').innerText = fmtMoney(totalWaste);
+      document.getElementById('kpiWasteWeight').innerText = fmtKg(totalKg);
+      document.getElementById('kpiTotalExcess').innerText = fmtMoney(totalExcess);
+      
+      const excessRate = totalWaste ? (totalExcess / totalWaste * 100).toFixed(1) : 0;
+      document.getElementById('kpiExcessRate').innerHTML = `<i data-lucide="trending-up" class="w-3.5 h-3.5"></i> คิดเป็น ${excessRate}% ของมูลค่าของเสียทั้งหมด`;
+
+      document.getElementById('kpiAvgPaperCost').innerText = fmtPct(avgPaperCost);
+      const isPaperCostOver = avgPaperCost > 0.7902;
+      document.getElementById('kpiPaperCostStatus').innerHTML = `
+        <span class="${isPaperCostOver ? 'text-rose-500 font-semibold' : 'text-emerald-500 font-semibold'}">
+          ${isPaperCostOver ? '▲ สูงกว่าเป้าหมาย ' + ((avgPaperCost - 0.7902)*100).toFixed(2) + '%' : '▼ ต่ำกว่าเป้าหมาย'}
+        </span> (เป้า 79.02%)
+      `;
+    }
+
+    // ==========================================
+    // RENDER ALL 8 DEPARTMENT CHARTS (TAB 1)
+    // ==========================================
+    function renderDeptCharts() {
+      const labels = dataset.map(d => `W${d.week}`);
+
+      // Generic helper to draw standard Actual vs Target chart
+      const drawDeptChart = (canvasId, chartKey, actualData, targetVal, defaultColor, isPercentage, lowerBetter) => {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        if (charts[chartKey]) charts[chartKey].destroy();
+
+        const formattedActual = actualData.map(v => isPercentage ? (v * 100).toFixed(2) : v.toFixed(2));
+        const formattedTarget = actualData.map(() => isPercentage ? (targetVal * 100).toFixed(2) : targetVal.toFixed(2));
+
+        charts[chartKey] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                type: 'bar',
+                label: 'Actual',
+                data: formattedActual,
+                backgroundColor: actualData.map(v => {
+                  const isFail = lowerBetter ? (v > targetVal) : (v < targetVal);
+                  return isFail ? '#f43f5e' : defaultColor;
+                }),
+                borderRadius: 4
+              },
+              {
+                type: 'line',
+                label: `Target (${isPercentage ? (targetVal*100).toFixed(2)+'%' : targetVal})`,
+                data: formattedTarget,
+                borderColor: '#e11d48',
+                borderWidth: 2,
+                borderDash: [5, 4],
+                pointRadius: 0,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}${isPercentage ? '%' : ' ฿'}`
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: isPercentage,
+                ticks: {
+                  callback: function(v) {
+                    return Number(v).toFixed(2) + (isPercentage ? '%' : ' ฿');
+                  }
+                }
+              }
+            }
+          }
+        });
+      };
+
+      // 1. ราคาซื้อ / จัดซื้อ (ภัทร / พลอย) -> ยิ่งต่ำยิ่งดี, เป้า 18.30
+      drawDeptChart('deptChartBuyPrice', 'deptBuy', dataset.map(d => d.buyActual), 18.30, '#10b981', false, true);
+
+      // 2. ราคาขาย / ตลาด (พี่หญิง / เนย) -> ยิ่งสูงยิ่งดี, เป้า 25.70
+      drawDeptChart('deptChartSellPrice', 'deptSell', dataset.map(d => d.sellActual), 25.70, '#0284c7', false, false);
+
+      // 3. % Paper Cost (ทุกแผนก) -> ยิ่งต่ำยิ่งดี, เป้า 79.02%
+      drawDeptChart('deptChartPaperCost', 'deptPC', dataset.map(d => d.paperCostActual), 0.7902, '#3b82f6', true, true);
+
+      // 4. Waste / Production (ดล / ปัญญา / อาทร์) -> เป้า 5.00%
+      drawDeptChart('deptChartProd', 'deptProd', dataset.map(d => d.wasteProdActual), 0.05, '#f59e0b', true, true);
+
+      // 5. Waste / Planning (พี่เก่ง / ปลา) -> เป้า 3.50%
+      drawDeptChart('deptChartPlan', 'deptPlan', dataset.map(d => d.wastePlanActual), 0.035, '#3b82f6', true, true);
+
+      // 6. Waste / RM (พี่ไก่ / แบม) -> เป้า 1.58%
+      drawDeptChart('deptChartRM', 'deptRM', dataset.map(d => d.wasteRMActual), 0.0158, '#ec4899', true, true);
+
+      // 7. Waste / Marketing (ส้ม / เตย) -> เป้า 0.04%
+      drawDeptChart('deptChartMkt', 'deptMkt', dataset.map(d => d.wasteMktActual), 0.0004, '#10b981', true, true);
+
+      // 8. Diff Waste (นุ่น / พี่ไก่) -> เป้า 0.86%
+      drawDeptChart('deptChartDiff', 'deptDiff', dataset.map(d => d.diffWasteActual), 0.0086, '#6366f1', true, true);
+
+      // 9. Stacked Value Chart
+      const ctxStack = document.getElementById('deptChartStacked').getContext('2d');
+      if (charts.deptStacked) charts.deptStacked.destroy();
+      charts.deptStacked = new Chart(ctxStack, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Diff Waste (นุ่น/พี่ไก่)', data: dataset.map(d => d.diffWasteVal), backgroundColor: '#6366f1' },
+            { label: 'Production (ดล/ปัญญา)', data: dataset.map(d => d.wasteProdVal), backgroundColor: '#f59e0b' },
+            { label: 'Planning (เก่ง/ปลา)', data: dataset.map(d => d.wastePlanVal), backgroundColor: '#3b82f6' },
+            { label: 'RM (พี่ไก่/แบม)', data: dataset.map(d => d.wasteRMVal), backgroundColor: '#ec4899' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ฿${Number(ctx.raw).toLocaleString('th-TH', {maximumFractionDigits:0})}`
+              }
+            }
+          },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, ticks: { callback: v => '฿' + (v/1000000).toFixed(1) + 'M' } }
+          }
+        }
+      });
+    }
+
+    // INIT DASHBOARD CHARTS
+    function initOverviewCharts() {
+      const labels = dataset.map(d => `W${d.week}`);
+
+      // Paper Cost Chart
+      const ctx1 = document.getElementById('paperCostChart').getContext('2d');
+      if (charts.paperCost) charts.paperCost.destroy();
+      charts.paperCost = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '% Paper Cost จริง',
+              data: dataset.map(d => (d.paperCostActual * 100).toFixed(2)),
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37, 99, 235, 0.1)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.3,
+              pointBackgroundColor: dataset.map(d => d.paperCostActual > d.paperCostTarget ? '#e11d48' : '#16a34a'),
+              pointRadius: 6
+            },
+            {
+              label: 'เป้าหมาย (79.02%)',
+              data: dataset.map(() => 79.02),
+              borderColor: '#ef4444',
+              borderWidth: 2,
+              borderDash: [6, 4],
+              pointRadius: 0,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { suggestedMin: 70, suggestedMax: 95, ticks: { callback: v => v + '%' } }
+          }
+        }
+      });
+
+      // Waste Value vs Excess
+      const ctx2 = document.getElementById('wasteValueChart').getContext('2d');
+      if (charts.wasteVal) charts.wasteVal.destroy();
+      charts.wasteVal = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'มูลค่าของเสียรวม (บาท)',
+              data: dataset.map(d => d.totalWasteVal),
+              backgroundColor: '#3b82f6',
+              borderRadius: 6
+            },
+            {
+              label: 'ส่วนที่เกินเป้าหมาย (Loss)',
+              data: dataset.map(d => d.totalExcessVal),
+              backgroundColor: '#f43f5e',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { ticks: { callback: v => '฿' + (v/1000000).toFixed(1) + 'M' } }
+          }
+        }
+      });
+
+      // Waste Distribution Pie
+      const prodSum = dataset.reduce((s, d) => s + (d.wasteProdVal || 0), 0);
+      const planSum = dataset.reduce((s, d) => s + (d.wastePlanVal || 0), 0);
+      const rmSum = dataset.reduce((s, d) => s + (d.wasteRMVal || 0), 0);
+      const diffSum = dataset.reduce((s, d) => s + (d.diffWasteVal || 0), 0);
+      const mktSum = dataset.reduce((s, d) => s + (d.wasteMktVal || 0), 0);
+      const totalDeptWaste = prodSum + planSum + rmSum + diffSum + mktSum;
+
+      const ctx3 = document.getElementById('wastePieChart').getContext('2d');
+      if (charts.wastePie) charts.wastePie.destroy();
+      charts.wastePie = new Chart(ctx3, {
+        type: 'doughnut',
+        data: {
+          labels: ['Diff Waste', 'Production', 'Planning', 'RM', 'Marketing'],
+          datasets: [{
+            data: [diffSum, prodSum, planSum, rmSum, mktSum],
+            backgroundColor: ['#6366f1', '#f59e0b', '#3b82f6', '#ec4899', '#10b981'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          cutout: '68%'
+        }
+      });
+
+      // Update Legend
+      const pieLegendDiv = document.getElementById('pieLegend');
+      const pieCategories = [
+        { label: 'Diff Waste (นุ่น/พี่ไก่)', val: diffSum, color: 'bg-indigo-500' },
+        { label: 'Production (ดล/ปัญญา)', val: prodSum, color: 'bg-amber-500' },
+        { label: 'Planning (เก่ง/ปลา)', val: planSum, color: 'bg-blue-500' },
+        { label: 'RM (พี่ไก่/แบม)', val: rmSum, color: 'bg-pink-500' },
+        { label: 'Marketing (ส้ม/เตย)', val: mktSum, color: 'bg-emerald-500' }
+      ];
+      pieLegendDiv.innerHTML = pieCategories.map(c => `
+        <div class="flex items-center justify-between text-[11px]">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full ${c.color}"></span>
+            <span class="text-slate-600 truncate max-w-[150px]">${c.label}</span>
+          </div>
+          <div class="font-semibold text-slate-800">
+            ${((c.val/totalDeptWaste)*100).toFixed(1)}% <span class="text-slate-400 font-normal">(${fmtMoney(c.val)})</span>
+          </div>
+        </div>
+      `).join('');
+
+      // Price Buy vs Sell
+      const ctx5 = document.getElementById('priceChart').getContext('2d');
+      if (charts.price) charts.price.destroy();
+      charts.price = new Chart(ctx5, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'ราคาซื้อจริง',
+              data: dataset.map(d => d.buyActual),
+              borderColor: '#059669',
+              backgroundColor: '#059669',
+              borderWidth: 2,
+              pointRadius: 5
+            },
+            {
+              label: 'เป้าหมายราคาซื้อ (18.30)',
+              data: dataset.map(() => 18.30),
+              borderColor: '#6ee7b7',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0
+            },
+            {
+              label: 'ราคาขายจริง',
+              data: dataset.map(d => d.sellActual),
+              borderColor: '#0284c7',
+              backgroundColor: '#0284c7',
+              borderWidth: 2,
+              pointRadius: 5
+            },
+            {
+              label: 'เป้าหมายราคาขาย (25.70)',
+              data: dataset.map(() => 25.70),
+              borderColor: '#7dd3fc',
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              suggestedMin: 15,
+              suggestedMax: 28,
+              ticks: {
+                callback: function(v) {
+                  return '฿' + Number(v).toFixed(2);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // RENDER WEEKLY DRILLDOWN
+    function populateWeekSelector() {
+      const select = document.getElementById('weekSelect');
+      select.innerHTML = dataset.map((d, idx) => `
+        <option value="${idx}">Week ${d.week} (${d.date}/${d.month}/${d.year})</option>
+      `).join('');
+    }
+
+    function renderWeeklyDetail() {
+      const select = document.getElementById('weekSelect');
+      const idx = parseInt(select.value) || 0;
+      const data = dataset[idx];
+      if (!data) return;
+
+      document.getElementById('weekDateLabel').innerText = `ช่วงวันที่ ${data.date}/${data.month}/${data.year}`;
+
+      const topics = [
+        { name: '1. ราคาซื้อ / จัดซื้อ', owner: 'ภัทร/พลอย', target: data.buyTarget, actual: data.buyActual, type: 'price', lowerBetter: true, kg: null, val: 0, excess: 0 },
+        { name: '2. ราคาขาย / ตลาด', owner: 'พี่หญิง/เนย', target: data.sellTarget, actual: data.sellActual, type: 'price', lowerBetter: false, kg: null, val: 0, excess: 0 },
+        { name: '3. % Paper Cost', owner: 'ทุกแผนก', target: data.paperCostTarget, actual: data.paperCostActual, type: 'pct', lowerBetter: true, kg: null, val: 0, excess: 0 },
+        { name: '4. Waste / Production', owner: 'ดล/ปัญญา/อาทร์', target: data.wasteProdTarget, actual: data.wasteProdActual, type: 'waste', lowerBetter: true, kg: data.wasteProdKg, val: data.wasteProdVal, excess: data.wasteProdActual > data.wasteProdTarget ? (data.wasteProdVal * (data.wasteProdActual - data.wasteProdTarget)/data.wasteProdActual) : 0 },
+        { name: '5. Waste / Planning', owner: 'พี่เก่ง/ปลา', target: data.wastePlanTarget, actual: data.wastePlanActual, type: 'waste', lowerBetter: true, kg: data.wastePlanKg, val: data.wastePlanVal, excess: data.wastePlanActual > data.wastePlanTarget ? (data.wastePlanVal * (data.wastePlanActual - data.wastePlanTarget)/data.wastePlanActual) : 0 },
+        { name: '6. Waste / RM', owner: 'พี่ไก่ / แบม', target: data.wasteRMTarget, actual: data.wasteRMActual, type: 'waste', lowerBetter: true, kg: data.wasteRMKg, val: data.wasteRMVal, excess: data.wasteRMActual > data.wasteRMTarget ? (data.wasteRMVal * (data.wasteRMActual - data.wasteRMTarget)/data.wasteRMActual) : 0 },
+        { name: '7. Waste / Marketing', owner: 'ส้ม / เตย', target: data.wasteMktTarget, actual: data.wasteMktActual, type: 'waste', lowerBetter: true, kg: data.wasteMktKg, val: data.wasteMktVal, excess: data.wasteMktActual > data.wasteMktTarget ? (data.wasteMktVal * (data.wasteMktActual - data.wasteMktTarget)/data.wasteMktActual) : 0 },
+        { name: '8. Diff Waste', owner: 'นุ่น /พี่ไก่', target: data.diffWasteTarget, actual: data.diffWasteActual, type: 'waste', lowerBetter: true, kg: data.diffWasteKg, val: data.diffWasteVal, excess: data.diffWasteActual > data.diffWasteTarget ? (data.diffWasteVal * (data.diffWasteActual - data.diffWasteTarget)/data.diffWasteActual) : 0 }
+      ];
+
+      let failCount = 0;
+      const tbody = document.getElementById('weeklyTableBody');
+      tbody.innerHTML = topics.map(t => {
+        let diff = t.actual - t.target;
+        let isFail = t.lowerBetter ? (t.actual > t.target) : (t.actual < t.target);
+        if (isFail) failCount++;
+
+        let targetDisp = t.type === 'pct' ? fmtPct(t.target) : (t.type === 'waste' ? (t.target * 100).toFixed(2) + '%' : t.target.toFixed(2));
+        let actualDisp = t.type === 'pct' ? fmtPct(t.actual) : (t.type === 'waste' ? (t.actual * 100).toFixed(2) + '%' : t.actual.toFixed(2));
+        let diffDisp = (diff > 0 ? '+' : '') + (t.type === 'pct' || t.type === 'waste' ? (diff * 100).toFixed(2) + '%' : diff.toFixed(2));
+
+        return `
+          <tr class="${isFail ? 'bg-rose-50/40 hover:bg-rose-50/70' : 'hover:bg-slate-50'} transition">
+            <td class="py-3 px-4 font-semibold text-slate-800">${t.name}</td>
+            <td class="py-3 px-4 text-slate-500">${t.owner}</td>
+            <td class="py-3 px-4 text-right font-medium text-slate-600">${targetDisp}</td>
+            <td class="py-3 px-4 text-right font-bold ${isFail ? 'text-rose-600' : 'text-emerald-700'}">${actualDisp}</td>
+            <td class="py-3 px-4 text-right text-slate-500 font-medium">${diffDisp}</td>
+            <td class="py-3 px-4 text-center">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${isFail ? 'badge-bad' : 'badge-good'}">
+                ${isFail ? '✕ เกินเป้าหมาย' : '✓ ผ่านเป้าหมาย'}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right text-slate-700">${t.kg ? fmtKg(t.kg) : '-'}</td>
+            <td class="py-3 px-4 text-right text-slate-700 font-medium">${t.val ? fmtMoney(t.val) : '-'}</td>
+            <td class="py-3 px-4 text-right font-bold ${t.excess > 0 ? 'text-rose-600' : 'text-slate-400'}">${t.excess > 0 ? fmtMoney(t.excess) : '฿0.00'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('weekCulpritsBadge').innerText = `เกินเป้าหมาย ${failCount} หัวข้อ`;
+      document.getElementById('weekTotalKg').innerText = fmtKg(data.totalWasteKg);
+      document.getElementById('weekTotalVal').innerText = fmtMoney(data.totalWasteVal);
+      document.getElementById('weekTotalExcess').innerText = fmtMoney(data.totalExcessVal);
+
+      // Diagnosis remarks
+      const diagList = document.getElementById('weeklyDiagnosisList');
+      let remarks = [];
+      if (data.diffWasteActual > data.diffWasteTarget) {
+        remarks.push(`• <strong>Diff Waste สูงผิดปกติ:</strong> สัปดาห์นี้อยู่ที่ ${(data.diffWasteActual*100).toFixed(2)}% (เป้า 0.86%) ส่งผลให้เกิดการสูญเสียทางการเงินสูงเป็นอันดับหนึ่ง`);
+      }
+      if (data.wasteRMActual > data.wasteRMTarget) {
+        remarks.push(`• <strong>Waste / RM เกินเป้า:</strong> วัตถุดิบเสียหายที่ ${(data.wasteRMActual*100).toFixed(2)}% (เป้า 1.58%) ควรตรวจสอบความเสียหายจากการขนย้าย`);
+      }
+      if (data.paperCostActual > data.paperCostTarget) {
+        remarks.push(`• <strong>% Paper Cost หลุดกรอบ:</strong> Actual ${fmtPct(data.paperCostActual)} (เป้า 79.02%) ได้รับแรงกดดันจากทั้งราคาขายเฉลี่ยต่ำกว่าเป้า และมูลค่าของเสียที่พุ่งสูง`);
+      }
+      if (remarks.length === 0) {
+        remarks.push(`• สัปดาห์นี้ควบคุมตัวชี้วัดได้ตามเกณฑ์มาตรฐาน ยอดเยี่ยม!`);
+      }
+      diagList.innerHTML = remarks.map(r => `<div>${r}</div>`).join('');
+    }
+
+    // RENDER RAW DATA TABLE
+    function renderRawTable() {
+      const tbody = document.getElementById('rawDataTableBody');
+      tbody.innerHTML = dataset.map((d, i) => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-3 px-3 font-bold text-slate-900">Week ${d.week}</td>
+          <td class="py-3 px-3 text-slate-500">${d.date}/${d.month}/${d.year}</td>
+          <td class="py-3 px-3 text-right ${d.buyActual > d.buyTarget ? 'text-rose-600 font-bold' : 'text-slate-700'}">${d.buyActual.toFixed(2)}</td>
+          <td class="py-3 px-3 text-right ${d.sellActual < d.sellTarget ? 'text-amber-600' : 'text-slate-700'}">${d.sellActual.toFixed(2)}</td>
+          <td class="py-3 px-3 text-right font-semibold ${d.paperCostActual > d.paperCostTarget ? 'text-rose-600' : 'text-emerald-600'}">${fmtPct(d.paperCostActual)}</td>
+          <td class="py-3 px-3 text-right ${d.wasteProdActual > d.wasteProdTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wasteProdActual*100).toFixed(2)}%</td>
+          <td class="py-3 px-3 text-right ${d.wastePlanActual > d.wastePlanTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wastePlanActual*100).toFixed(2)}%</td>
+          <td class="py-3 px-3 text-right ${d.wasteRMActual > d.wasteRMTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wasteRMActual*100).toFixed(2)}%</td>
+          <td class="py-3 px-3 text-right font-bold ${d.diffWasteActual > d.diffWasteTarget ? 'text-rose-600' : 'text-slate-600'}">${(d.diffWasteActual*100).toFixed(2)}%</td>
+          <td class="py-3 px-3 text-right text-rose-600 font-bold">${fmtMoney(d.totalExcessVal)}</td>
+          <td class="py-3 px-3 text-right font-bold text-slate-800">${fmtMoney(d.totalWasteVal)}</td>
+          <td class="py-3 px-3 text-center space-x-1">
+            <button onclick="editRecord(${i})" title="แก้ไข" class="p-1 hover:text-blue-600 text-slate-400"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+            <button onclick="deleteRecord(${i})" title="ลบ" class="p-1 hover:text-rose-600 text-slate-400"><i data-lucide="trash" class="w-4 h-4"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // MODAL ACTIONS
+    function openModal(id) {
+      document.getElementById('editIndex').value = "-1";
+      document.getElementById('modalTitle').innerHTML = `<i data-lucide="calendar-plus" class="w-5 h-5 text-blue-600"></i> บันทึกข้อมูลประจำสัปดาห์ใหม่`;
+      document.getElementById('weekForm').reset();
+      
+      if (dataset.length > 0) {
+        const last = dataset[dataset.length - 1];
+        document.getElementById('inputWeek').value = last.week + 1;
+        document.getElementById('inputMonth').value = last.month;
+        document.getElementById('inputYear').value = last.year;
+        document.getElementById('inputBuyPrice').value = 18.20;
+        document.getElementById('inputSellPrice').value = 25.50;
+        document.getElementById('inputPaperCost').value = 0.7900;
+        document.getElementById('inputWasteProd').value = 0.0470;
+        document.getElementById('inputWastePlan').value = 0.0330;
+        document.getElementById('inputWasteRM').value = 0.0170;
+        document.getElementById('inputDiffWaste').value = 0.0120;
+      }
+      document.getElementById(id).classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function editRecord(index) {
+      const d = dataset[index];
+      document.getElementById('editIndex').value = index;
+      document.getElementById('modalTitle').innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-blue-600"></i> แก้ไขข้อมูล Week ${d.week}`;
+      document.getElementById('inputWeek').value = d.week;
+      document.getElementById('inputDate').value = d.date;
+      document.getElementById('inputMonth').value = d.month;
+      document.getElementById('inputYear').value = d.year;
+      document.getElementById('inputBuyPrice').value = d.buyActual;
+      document.getElementById('inputSellPrice').value = d.sellActual;
+      document.getElementById('inputPaperCost').value = d.paperCostActual;
+      document.getElementById('inputWasteProd').value = d.wasteProdActual;
+      document.getElementById('inputWastePlan').value = d.wastePlanActual;
+      document.getElementById('inputWasteRM').value = d.wasteRMActual;
+      document.getElementById('inputDiffWaste').value = d.diffWasteActual;
+      document.getElementById('inputTotalWasteVal').value = d.totalWasteVal;
+      document.getElementById('inputTotalWasteKg').value = d.totalWasteKg;
+
+      document.getElementById('addModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function deleteRecord(index) {
+      if (confirm(`คุณต้องการลบข้อมูล Week ${dataset[index].week} ใช่หรือไม่?`)) {
+        dataset.splice(index, 1);
+        saveDataset();
+        initApp();
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById('editIndex').value);
+      
+      const prodAct = parseFloat(document.getElementById('inputWasteProd').value);
+      const planAct = parseFloat(document.getElementById('inputWastePlan').value);
+      const rmAct = parseFloat(document.getElementById('inputWasteRM').value);
+      const diffAct = parseFloat(document.getElementById('inputDiffWaste').value);
+      const totalWaste = parseFloat(document.getElementById('inputTotalWasteVal').value);
+      const totalKg = parseInt(document.getElementById('inputTotalWasteKg').value);
+
+      let excess = 0;
+      if (diffAct > 0.0086) excess += totalWaste * 0.45 * ((diffAct - 0.0086)/diffAct);
+      if (rmAct > 0.0158) excess += totalWaste * 0.15 * ((rmAct - 0.0158)/rmAct);
+      if (prodAct > 0.05) excess += totalWaste * 0.20 * ((prodAct - 0.05)/prodAct);
+      if (planAct > 0.035) excess += totalWaste * 0.18 * ((planAct - 0.035)/planAct);
+
+      const record = {
+        week: parseInt(document.getElementById('inputWeek').value),
+        date: document.getElementById('inputDate').value,
+        month: parseInt(document.getElementById('inputMonth').value),
+        year: parseInt(document.getElementById('inputYear').value),
+        buyTarget: 18.3,
+        buyActual: parseFloat(document.getElementById('inputBuyPrice').value),
+        sellTarget: 25.7,
+        sellActual: parseFloat(document.getElementById('inputSellPrice').value),
+        paperCostTarget: 0.7902,
+        paperCostActual: parseFloat(document.getElementById('inputPaperCost').value),
+        wasteProdTarget: 0.05,
+        wasteProdActual: prodAct,
+        wasteProdVal: totalWaste * 0.22,
+        wasteProdKg: Math.round(totalKg * 0.23),
+        wastePlanTarget: 0.035,
+        wastePlanActual: planAct,
+        wastePlanVal: totalWaste * 0.17,
+        wastePlanKg: Math.round(totalKg * 0.17),
+        wasteRMTarget: 0.0158,
+        wasteRMActual: rmAct,
+        wasteRMVal: totalWaste * 0.10,
+        wasteRMKg: Math.round(totalKg * 0.11),
+        wasteMktTarget: 0.0004,
+        wasteMktActual: 0.0001,
+        wasteMktVal: 3000,
+        wasteMktKg: 150,
+        diffWasteTarget: 0.0086,
+        diffWasteActual: diffAct,
+        diffWasteVal: totalWaste * 0.48,
+        diffWasteKg: Math.round(totalKg * 0.49),
+        totalWasteVal: totalWaste,
+        totalExcessVal: Math.round(excess),
+        totalWasteKg: totalKg,
+        excessCount: (prodAct>0.05?1:0) + (planAct>0.035?1:0) + (rmAct>0.0158?1:0) + (diffAct>0.0086?1:0)
+      };
+
+      if (editIdx >= 0) {
+        dataset[editIdx] = record;
+      } else {
+        dataset.push(record);
+      }
+
+      dataset.sort((a, b) => a.week - b.week);
+      saveDataset();
+      closeModal('addModal');
+      initApp();
+    }
+
+    // EXPORT TO CSV
+    function exportCSV() {
+      let csv = "Week,Date,Month,Year,BuyPriceActual,SellPriceActual,PaperCostActual,WasteProdActual,WastePlanActual,WasteRMActual,DiffWasteActual,TotalWasteVal,TotalExcessVal,TotalWasteKg\n";
+      dataset.forEach(r => {
+        csv += `${r.week},"${r.date}",${r.month},${r.year},${r.buyActual},${r.sellActual},${r.paperCostActual},${r.wasteProdActual},${r.wastePlanActual},${r.wasteRMActual},${r.diffWasteActual},${r.totalWasteVal},${r.totalExcessVal},${r.totalWasteKg}\n`;
+      });
+      const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PaperCost_Report_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+    }
+
+    function initApp() {
+      updateKPIs();
+      renderDeptCharts();
+      populateWeekSelector();
+      renderWeeklyDetail();
+      renderRawTable();
+      lucide.createIcons();
+    }
+
+    window.onload = initApp;
+  </script>
+</body>
+</html>
