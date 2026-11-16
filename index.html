@@ -514,6 +514,7 @@
                 <th class="py-3 px-3 text-right">Production</th>
                 <th class="py-3 px-3 text-right">Planning</th>
                 <th class="py-3 px-3 text-right">RM</th>
+                <th class="py-3 px-3 text-right">Marketing</th>
                 <th class="py-3 px-3 text-right">Diff Waste</th>
                 <th class="py-3 px-3 text-right">FG+LTS</th>
                 <th class="py-3 px-3 text-right font-bold text-rose-600">ส่วนเกินเป้ารวม</th>
@@ -667,6 +668,7 @@
                 <th class="py-3 px-3 text-right">Production</th>
                 <th class="py-3 px-3 text-right">Planning</th>
                 <th class="py-3 px-3 text-right">RM</th>
+                <th class="py-3 px-3 text-right">Marketing</th>
                 <th class="py-3 px-3 text-right">Diff Waste</th>
                 <th class="py-3 px-3 text-right">FG+LTS</th>
                 <th class="py-3 px-3 text-center">จัดการ</th>
@@ -759,7 +761,7 @@
           <span>อัตราส่วนและน้ำหนักของเสียแต่ละหน่วยงาน (Waste Rate & Kg)</span>
           <span class="text-[11px] font-normal text-slate-400">ใส่อัตราส่วนและน้ำหนักของแต่ละหน่วยงาน</span>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <!-- 1. Production -->
           <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
             <span class="font-bold text-slate-700 block text-[11px]">1. Production (เป้า 0.05)</span>
@@ -812,9 +814,22 @@
             </div>
           </div>
 
-          <!-- 5. Waste FG+LTS -->
+          <!-- 5. Waste / Marketing -->
+          <div class="bg-slate-50/70 p-2.5 rounded-xl border border-emerald-200/80 space-y-1.5">
+            <span class="font-bold text-emerald-800 block text-[11px]">5. Waste / Marketing (เป้า 0.0004)</span>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">Rate (% หรือ อัตราส่วน)</label>
+              <input type="number" step="0.0001" id="inputWasteMkt" required placeholder="เช่น 0.0001" class="w-full bg-white border rounded-lg p-1.5 text-xs">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">น้ำหนัก (กก.)</label>
+              <input type="number" step="1" id="inputWasteMktKg" required placeholder="กก." oninput="calculateTotals()" class="w-full bg-white border rounded-lg p-1.5 text-xs font-semibold text-emerald-700">
+            </div>
+          </div>
+
+          <!-- 6. Waste FG+LTS -->
           <div class="bg-slate-50/70 p-2.5 rounded-xl border border-teal-200/80 space-y-1.5">
-            <span class="font-bold text-teal-800 block text-[11px]">5. Waste FG+LTS (เป้า 0.0002)</span>
+            <span class="font-bold text-teal-800 block text-[11px]">6. Waste FG+LTS (เป้า 0.0002)</span>
             <div>
               <label class="block text-[10px] text-slate-500 mb-0.5">Rate (% หรือ อัตราส่วน)</label>
               <input type="number" step="0.0001" id="inputWasteFGLTS" required placeholder="เช่น 0.0001" class="w-full bg-white border rounded-lg p-1.5 text-xs">
@@ -834,7 +849,7 @@
           <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-200">
             <label class="block text-slate-700 font-semibold mb-1">น้ำหนักของเสียรวม (กก.) <span class="text-blue-600 font-normal text-[11px]">(รวมทุกส่วนงาน)</span></label>
             <input type="number" step="1" id="inputTotalWasteKg" required oninput="calculateFromTotal()" class="w-full bg-white border border-blue-300 rounded-lg p-2 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500">
-            <span class="text-[10px] text-slate-500 mt-1 block">Production + Planning + RM + Diff Waste + FG+LTS</span>
+            <span class="text-[10px] text-slate-500 mt-1 block">Production + Planning + RM + Diff Waste + Marketing + FG+LTS</span>
           </div>
           <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-200">
             <label class="block text-slate-700 font-semibold mb-1">มูลค่าของเสียรวม (บาท) <span class="text-emerald-700 font-normal text-[11px]">(กก.รวม × ราคาซื้อจริง)</span></label>
@@ -1491,6 +1506,7 @@
           <td class="py-3 px-3 text-right ${d.wasteProdActual > d.wasteProdTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wasteProdActual*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-right ${d.wastePlanActual > d.wastePlanTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wastePlanActual*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-right ${d.wasteRMActual > d.wasteRMTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wasteRMActual*100).toFixed(2)}%</td>
+          <td class="py-3 px-3 text-right ${d.wasteMktActual > (d.wasteMktTarget||0.0004) ? 'text-rose-600 font-bold' : 'text-slate-600'}">${((d.wasteMktActual||0)*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-right font-bold ${d.diffWasteActual > d.diffWasteTarget ? 'text-rose-600' : 'text-slate-600'}">${(d.diffWasteActual*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-right ${d.wasteFGLTSActual > (d.wasteFGLTSTarget||0.0002) ? 'text-rose-600 font-bold' : 'text-slate-600'}">${((d.wasteFGLTSActual||0)*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-center space-x-1">
@@ -1509,10 +1525,11 @@
       const planKg = parseFloat(document.getElementById('inputWastePlanKg').value) || 0;
       const rmKg = parseFloat(document.getElementById('inputWasteRMKg').value) || 0;
       const diffKg = parseFloat(document.getElementById('inputDiffWasteKg').value) || 0;
+      const mktKg = parseFloat(document.getElementById('inputWasteMktKg').value) || 0;
       const fgLtsKg = parseFloat(document.getElementById('inputWasteFGLTSKg').value) || 0;
       const buyPrice = parseFloat(document.getElementById('inputBuyPrice').value) || 0;
 
-      const totalKg = Math.round(prodKg + planKg + rmKg + diffKg + fgLtsKg);
+      const totalKg = Math.round(prodKg + planKg + rmKg + diffKg + mktKg + fgLtsKg);
       document.getElementById('inputTotalWasteKg').value = totalKg > 0 ? totalKg : '';
 
       if (totalKg > 0 && buyPrice > 0) {
@@ -1549,11 +1566,13 @@
         document.getElementById('inputWastePlan').value = 0.0330;
         document.getElementById('inputWasteRM').value = 0.0170;
         document.getElementById('inputDiffWaste').value = 0.0120;
+        document.getElementById('inputWasteMkt').value = 0.0001;
         document.getElementById('inputWasteFGLTS').value = 0.0001;
         document.getElementById('inputWasteProdKg').value = '';
         document.getElementById('inputWastePlanKg').value = '';
         document.getElementById('inputWasteRMKg').value = '';
         document.getElementById('inputDiffWasteKg').value = '';
+        document.getElementById('inputWasteMktKg').value = '';
         document.getElementById('inputWasteFGLTSKg').value = '';
         document.getElementById('inputTotalWasteKg').value = '';
         document.getElementById('inputTotalWasteVal').value = '';
@@ -1587,6 +1606,8 @@
       document.getElementById('inputWasteRMKg').value = d.wasteRMKg || Math.round((d.totalWasteKg || 0) * 0.11);
       document.getElementById('inputDiffWaste').value = d.diffWasteActual;
       document.getElementById('inputDiffWasteKg').value = d.diffWasteKg || Math.round((d.totalWasteKg || 0) * 0.49);
+      document.getElementById('inputWasteMkt').value = d.wasteMktActual !== undefined ? d.wasteMktActual : 0.0001;
+      document.getElementById('inputWasteMktKg').value = d.wasteMktKg !== undefined ? d.wasteMktKg : 0;
       document.getElementById('inputWasteFGLTS').value = d.wasteFGLTSActual !== undefined ? d.wasteFGLTSActual : 0.0001;
       document.getElementById('inputWasteFGLTSKg').value = d.wasteFGLTSKg !== undefined ? d.wasteFGLTSKg : 0;
       document.getElementById('inputTotalWasteVal').value = d.totalWasteVal;
@@ -1616,17 +1637,19 @@
       const planAct = parseFloat(document.getElementById('inputWastePlan').value);
       const rmAct = parseFloat(document.getElementById('inputWasteRM').value);
       const diffAct = parseFloat(document.getElementById('inputDiffWaste').value);
+      const mktAct = parseFloat(document.getElementById('inputWasteMkt').value) || 0;
       const fgLtsAct = parseFloat(document.getElementById('inputWasteFGLTS').value) || 0;
 
       const prodKg = parseFloat(document.getElementById('inputWasteProdKg').value) || 0;
       const planKg = parseFloat(document.getElementById('inputWastePlanKg').value) || 0;
       const rmKg = parseFloat(document.getElementById('inputWasteRMKg').value) || 0;
       const diffKg = parseFloat(document.getElementById('inputDiffWasteKg').value) || 0;
+      const mktKg = parseFloat(document.getElementById('inputWasteMktKg').value) || 0;
       const fgLtsKg = parseFloat(document.getElementById('inputWasteFGLTSKg').value) || 0;
 
       let totalKg = parseInt(document.getElementById('inputTotalWasteKg').value);
       if (!totalKg || isNaN(totalKg)) {
-        totalKg = Math.round(prodKg + planKg + rmKg + diffKg + fgLtsKg);
+        totalKg = Math.round(prodKg + planKg + rmKg + diffKg + mktKg + fgLtsKg);
       }
 
       let totalWaste = parseFloat(document.getElementById('inputTotalWasteVal').value);
@@ -1639,6 +1662,7 @@
       if (rmAct > 0.0158) excess += (rmKg > 0 ? rmKg * buyPrice : totalWaste * 0.15) * ((rmAct - 0.0158)/rmAct);
       if (prodAct > 0.05) excess += (prodKg > 0 ? prodKg * buyPrice : totalWaste * 0.20) * ((prodAct - 0.05)/prodAct);
       if (planAct > 0.035) excess += (planKg > 0 ? planKg * buyPrice : totalWaste * 0.18) * ((planAct - 0.035)/planAct);
+      if (mktAct > 0.0004) excess += (mktKg > 0 ? mktKg * buyPrice : totalWaste * 0.01) * ((mktAct - 0.0004)/mktAct);
       if (fgLtsAct > 0.0002) excess += (fgLtsKg > 0 ? fgLtsKg * buyPrice : totalWaste * 0.01) * ((fgLtsAct - 0.0002)/fgLtsAct);
 
       const record = {
@@ -1667,9 +1691,9 @@
         wasteRMVal: rmKg > 0 ? Math.round(rmKg * buyPrice * 100)/100 : totalWaste * 0.10,
         wasteRMKg: rmKg > 0 ? rmKg : Math.round(totalKg * 0.11),
         wasteMktTarget: 0.0004,
-        wasteMktActual: 0.0001,
-        wasteMktVal: 3000,
-        wasteMktKg: 150,
+        wasteMktActual: mktAct,
+        wasteMktVal: mktKg > 0 ? Math.round(mktKg * buyPrice * 100)/100 : Math.round(totalWaste * 0.001 * 100)/100,
+        wasteMktKg: mktKg,
         wasteFGLTSTarget: 0.0002,
         wasteFGLTSActual: fgLtsAct,
         wasteFGLTSVal: fgLtsKg > 0 ? Math.round(fgLtsKg * buyPrice * 100)/100 : Math.round(totalWaste * 0.001 * 100)/100,
@@ -1681,7 +1705,7 @@
         totalWasteVal: totalWaste,
         totalExcessVal: Math.round(excess),
         totalWasteKg: totalKg,
-        excessCount: (prodAct>0.05?1:0) + (planAct>0.035?1:0) + (rmAct>0.0158?1:0) + (diffAct>0.0086?1:0) + (fgLtsAct>0.0002?1:0)
+        excessCount: (prodAct>0.05?1:0) + (planAct>0.035?1:0) + (rmAct>0.0158?1:0) + (diffAct>0.0086?1:0) + (mktAct>0.0004?1:0) + (fgLtsAct>0.0002?1:0)
       };
 
       if (editIdx >= 0) {
