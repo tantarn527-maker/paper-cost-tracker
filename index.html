@@ -8,6 +8,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js DataLabels Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -121,6 +123,9 @@
       <button onclick="switchTab('deptCharts')" id="tabBtn-deptCharts" class="tab-active py-3 px-1 transition flex items-center gap-2">
         <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i> กราฟแยกรายส่วนงานครบ 8 หน่วยงาน (Actual vs Target)
       </button>
+      <button onclick="switchTab('monthly')" id="tabBtn-monthly" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+        <i data-lucide="calendar-range" class="w-4 h-4 text-emerald-600"></i> สรุปรายเดือน (Monthly Summary)
+      </button>
       <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
         <i data-lucide="layout-dashboard" class="w-4 h-4"></i> แดชบอร์ดภาพรวม (Overview)
       </button>
@@ -175,7 +180,7 @@
                 <p class="text-xs font-bold text-slate-700">18.30 ฿</p>
               </div>
             </div>
-            <div class="h-40 mt-2">
+            <div class="h-48 mt-2">
               <canvas id="deptChartBuyPrice"></canvas>
             </div>
           </div>
@@ -199,7 +204,7 @@
                 <p class="text-xs font-bold text-slate-700">25.70 ฿</p>
               </div>
             </div>
-            <div class="h-40 mt-2">
+            <div class="h-48 mt-2">
               <canvas id="deptChartSellPrice"></canvas>
             </div>
           </div>
@@ -223,7 +228,7 @@
                 <p class="text-xs font-bold text-slate-700">79.02%</p>
               </div>
             </div>
-            <div class="h-40 mt-2">
+            <div class="h-48 mt-2">
               <canvas id="deptChartPaperCost"></canvas>
             </div>
           </div>
@@ -247,7 +252,7 @@
                 <p class="text-xs font-bold text-slate-700">5.00%</p>
               </div>
             </div>
-            <div class="h-40 mt-2">
+            <div class="h-48 mt-2">
               <canvas id="deptChartProd"></canvas>
             </div>
           </div>
@@ -271,7 +276,7 @@
                 <p class="text-xs font-bold text-slate-700">3.50%</p>
               </div>
             </div>
-            <div class="h-40 mt-2">
+            <div class="h-48 mt-2">
               <canvas id="deptChartPlan"></canvas>
             </div>
           </div>
@@ -295,7 +300,7 @@
                 <p class="text-xs font-bold text-slate-700">1.58%</p>
               </div>
             </div>
-            <div class="h-40 mt-2">
+            <div class="h-48 mt-2">
               <canvas id="deptChartRM"></canvas>
             </div>
           </div>
@@ -319,7 +324,7 @@
                 <p class="text-xs font-bold text-slate-700">0.04%</p>
               </div>
             </div>
-            <div class="h-40 mt-2">
+            <div class="h-48 mt-2">
               <canvas id="deptChartMkt"></canvas>
             </div>
           </div>
@@ -343,7 +348,7 @@
                 <p class="text-xs font-bold text-slate-700">0.86%</p>
               </div>
             </div>
-            <div class="h-40 mt-2">
+            <div class="h-48 mt-2">
               <canvas id="deptChartDiff"></canvas>
             </div>
           </div>
@@ -373,6 +378,126 @@
         </div>
         <div class="h-56">
           <canvas id="deptChartStacked"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB: MONTHLY SUMMARY (สรุปรายเดือนด้วยค่าเฉลี่ย) -->
+    <!-- ========================================== -->
+    <div id="tabContent-monthly" class="space-y-6 hidden">
+      <!-- Selector & Month Overview Card -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl">
+            <i data-lucide="calendar-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">สรุปรายเดือน — คำนวณด้วยค่าเฉลี่ย (Monthly Average Summary)</h3>
+            <p class="text-xs text-slate-500">เปรียบเทียบค่าเฉลี่ย Actual เทียบกับ Target และสรุปมูลค่าสะสมตลอดทั้งเดือน</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <label for="monthlyMonthSelect" class="text-xs font-bold text-slate-700">เลือกเดือน:</label>
+          <select id="monthlyMonthSelect" onchange="renderMonthlySummary()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <!-- options inserted by JS -->
+          </select>
+          <span id="monthlyWeekCountBadge" class="text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 font-semibold rounded-lg border border-emerald-200">
+            5 สัปดาห์
+          </span>
+        </div>
+      </div>
+
+      <!-- Monthly KPI Mini Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-gradient-to-br from-blue-50 to-white p-4 rounded-xl border border-blue-100">
+          <p class="text-[11px] font-semibold text-blue-700 uppercase">ราคาซื้อเฉลี่ย / กก.</p>
+          <h4 id="monKpiBuy" class="text-xl font-bold text-slate-900 mt-1">18.20 ฿</h4>
+          <span id="monKpiBuyStatus" class="text-[10px] text-emerald-600 font-medium">เป้า 18.30 ฿ (ต่ำกว่าเป้า ✓)</span>
+        </div>
+        <div class="bg-gradient-to-br from-indigo-50 to-white p-4 rounded-xl border border-indigo-100">
+          <p class="text-[11px] font-semibold text-indigo-700 uppercase">ราคาขายเฉลี่ย / กก.</p>
+          <h4 id="monKpiSell" class="text-xl font-bold text-slate-900 mt-1">25.37 ฿</h4>
+          <span id="monKpiSellStatus" class="text-[10px] text-amber-600 font-medium">เป้า 25.70 ฿ (ต่ำกว่าเป้า ✕)</span>
+        </div>
+        <div class="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border border-purple-100">
+          <p class="text-[11px] font-semibold text-purple-700 uppercase">% Paper Cost เฉลี่ย</p>
+          <h4 id="monKpiPC" class="text-xl font-bold text-slate-900 mt-1">81.23%</h4>
+          <span id="monKpiPCStatus" class="text-[10px] text-rose-600 font-medium">เป้า 79.02% (สูงกว่าเป้า ✕)</span>
+        </div>
+        <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-xl border border-amber-200">
+          <p class="text-[11px] font-semibold text-amber-800 uppercase">% Waste เฉลี่ยรวม</p>
+          <h4 id="monKpiWastePct" class="text-xl font-bold text-slate-900 mt-1">11.45%</h4>
+          <span id="monKpiWasteStatus" class="text-[10px] text-rose-600 font-medium">เป้า 10.98% (สูงกว่าเป้า ✕)</span>
+        </div>
+        <div class="bg-gradient-to-br from-rose-50 to-white p-4 rounded-xl border border-rose-100">
+          <p class="text-[11px] font-semibold text-rose-700 uppercase">มูลค่าสูญเสียเกินเป้าทั้งเดือน</p>
+          <h4 id="monKpiExcess" class="text-xl font-bold text-rose-600 mt-1">฿5,176,052.92</h4>
+          <span id="monKpiWasteTotalVal" class="text-[10px] text-slate-500 font-medium">ของเสียรวม ฿24,645,169.11</span>
+        </div>
+      </div>
+
+      <!-- Monthly Detailed Averages Table -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+            <i data-lucide="table" class="w-4 h-4 text-emerald-600"></i> ตารางเปรียบเทียบค่าเฉลี่ยรายเดือนเทียบเป้าหมาย (ครบ 8 หน่วยงาน)
+          </h3>
+          <span id="monthlyOverCountBadge" class="text-xs px-2.5 py-1 bg-rose-50 text-rose-700 font-semibold rounded-full border border-rose-200">
+            เกินเป้า 2 หัวข้อ
+          </span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">หัวข้อตัวชี้วัด</th>
+                <th class="py-3 px-4">ผู้รับผิดชอบ</th>
+                <th class="py-3 px-4 text-right">เป้าหมาย (Target)</th>
+                <th class="py-3 px-4 text-right">ค่าเฉลี่ยจริงรายเดือน (Actual Avg)</th>
+                <th class="py-3 px-4 text-right">ผลต่างเทียบเป้า</th>
+                <th class="py-3 px-4 text-center">สถานะเฉลี่ย</th>
+                <th class="py-3 px-4 text-right">มูลค่ารวมทั้งเดือน (บาท)</th>
+                <th class="py-3 px-4 text-right text-rose-600 font-bold">มูลค่าสูญเสียเกินเป้ารวม (บาท)</th>
+              </tr>
+            </thead>
+            <tbody id="monthlyTableBody" class="divide-y divide-slate-100">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 12-Month Historical Matrix (ตารางเปรียบเทียบเฉลี่ย 12 เดือน) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+          <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-indigo-600"></i> สรุปค่าเฉลี่ยรายเดือนตลอดปี 2026 (Monthly Average Matrix)
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">ระบบจะคำนวณค่าเฉลี่ยอัตโนมัติตามเดือนที่บันทึกข้อมูล Week เข้ามา</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 uppercase text-[11px] font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">เดือน</th>
+                <th class="py-3 px-3 text-right">ราคาซื้อเฉลี่ย</th>
+                <th class="py-3 px-3 text-right">ราคาขายเฉลี่ย</th>
+                <th class="py-3 px-3 text-right">% Paper Cost</th>
+                <th class="py-3 px-3 text-right text-amber-700 font-bold">% Waste รวม</th>
+                <th class="py-3 px-3 text-right">Production</th>
+                <th class="py-3 px-3 text-right">Planning</th>
+                <th class="py-3 px-3 text-right">RM</th>
+                <th class="py-3 px-3 text-right">Diff Waste</th>
+                <th class="py-3 px-3 text-right font-bold text-rose-600">ส่วนเกินเป้ารวม</th>
+                <th class="py-3 px-3 text-right font-bold">มูลค่าของเสียรวม</th>
+              </tr>
+            </thead>
+            <tbody id="yearMatrixTableBody" class="divide-y divide-slate-100">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -517,8 +642,6 @@
                 <th class="py-3 px-3 text-right">Planning</th>
                 <th class="py-3 px-3 text-right">RM</th>
                 <th class="py-3 px-3 text-right">Diff Waste</th>
-                <th class="py-3 px-3 text-right font-bold text-rose-600">ส่วนเกินเป้า</th>
-                <th class="py-3 px-3 text-right font-bold">มูลค่ารวม</th>
                 <th class="py-3 px-3 text-center">จัดการ</th>
               </tr>
             </thead>
@@ -560,51 +683,123 @@
           </div>
         </div>
 
-        <div class="border-t pt-3 font-semibold text-slate-800 text-sm">ตัวชี้วัดราคาและต้นทุน (Targets กำหนดไว้แล้ว)</div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label class="block text-slate-600 mb-1">ราคาซื้อจริง (Target: 18.30)</label>
-            <input type="number" step="0.01" id="inputBuyPrice" required class="w-full bg-slate-50 border rounded-lg p-2">
+        <div class="border-t pt-3 font-semibold text-slate-800 text-sm flex items-center justify-between">
+          <span>ตัวชี้วัดราคาและต้นทุน (Targets กำหนดไว้แล้ว)</span>
+          <span class="text-[11px] font-normal text-slate-400">กรอกราคาจริงและน้ำหนักวัตถุดิบ/ยอดขาย</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <!-- 1. ราคาซื้อจริง -->
+          <div class="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200/80 space-y-1.5">
+            <span class="font-bold text-emerald-800 block text-[11px]">ราคาซื้อจริง (Target: 18.30 ฿)</span>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">ราคาซื้อจริง (บาท/กก.)</label>
+              <input type="number" step="0.01" id="inputBuyPrice" required oninput="calculateTotals()" class="w-full bg-white border border-emerald-300 rounded-lg p-1.5 text-xs font-semibold text-emerald-800 focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">น้ำหนักซื้อจริง (กก.)</label>
+              <input type="number" step="1" id="inputBuyKg" placeholder="เช่น 1,200,000" class="w-full bg-white border rounded-lg p-1.5 text-xs">
+            </div>
           </div>
-          <div>
-            <label class="block text-slate-600 mb-1">ราคาขายจริง (Target: 25.70)</label>
-            <input type="number" step="0.01" id="inputSellPrice" required class="w-full bg-slate-50 border rounded-lg p-2">
+
+          <!-- 2. ราคาขายจริง -->
+          <div class="bg-blue-50/50 p-2.5 rounded-xl border border-blue-200/80 space-y-1.5">
+            <span class="font-bold text-blue-800 block text-[11px]">ราคาขายจริง (Target: 25.70 ฿)</span>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">ราคาขายจริง (บาท/กก.)</label>
+              <input type="number" step="0.01" id="inputSellPrice" required class="w-full bg-white border border-blue-300 rounded-lg p-1.5 text-xs font-semibold text-blue-800 focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">น้ำหนักขายจริง (กก.)</label>
+              <input type="number" step="1" id="inputSellKg" placeholder="เช่น 1,000,000" class="w-full bg-white border rounded-lg p-1.5 text-xs">
+            </div>
           </div>
-          <div>
-            <label class="block text-slate-600 mb-1">% Paper Cost (Target: 79.02% หรือ 0.7902)</label>
-            <input type="number" step="0.0001" id="inputPaperCost" required placeholder="เช่น 0.8250" class="w-full bg-slate-50 border rounded-lg p-2">
+
+          <!-- 3. % Paper Cost -->
+          <div class="bg-purple-50/50 p-2.5 rounded-xl border border-purple-200/80 space-y-1.5 sm:col-span-2 lg:col-span-1 flex flex-col justify-between">
+            <div>
+              <span class="font-bold text-purple-800 block text-[11px]">% Paper Cost (Target: 79.02%)</span>
+              <p class="text-[10px] text-slate-500 mb-1">เป้าหมายต้นทุนกระดาษ</p>
+              <div>
+                <label class="block text-[10px] text-slate-500 mb-0.5">Actual Paper Cost Rate</label>
+                <input type="number" step="0.0001" id="inputPaperCost" required placeholder="เช่น 0.7900 หรือ 0.8123" class="w-full bg-white border border-purple-300 rounded-lg p-1.5 text-xs font-semibold text-purple-800 focus:ring-1 focus:ring-purple-500">
+              </div>
+            </div>
+            <span class="text-[10px] text-purple-600 block pt-1">Target: 0.7902 (79.02%)</span>
           </div>
         </div>
 
-        <div class="border-t pt-3 font-semibold text-slate-800 text-sm">อัตราส่วนของเสีย (Waste Actual Rate)</div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div>
-            <label class="block text-slate-600 mb-1">Production (เป้า 0.05)</label>
-            <input type="number" step="0.0001" id="inputWasteProd" required class="w-full bg-slate-50 border rounded-lg p-2">
+        <div class="border-t pt-3 font-semibold text-slate-800 text-sm flex items-center justify-between">
+          <span>อัตราส่วนและน้ำหนักของเสียแต่ละหน่วยงาน (Waste Rate & Kg)</span>
+          <span class="text-[11px] font-normal text-slate-400">ใส่อัตราส่วนและน้ำหนักของแต่ละหน่วยงาน</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- 1. Production -->
+          <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
+            <span class="font-bold text-slate-700 block text-[11px]">1. Production (เป้า 0.05)</span>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">Rate (% หรือ อัตราส่วน)</label>
+              <input type="number" step="0.0001" id="inputWasteProd" required placeholder="เช่น 0.0470" class="w-full bg-white border rounded-lg p-1.5 text-xs">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">น้ำหนัก (กก.)</label>
+              <input type="number" step="1" id="inputWasteProdKg" required placeholder="กก." oninput="calculateTotals()" class="w-full bg-white border rounded-lg p-1.5 text-xs font-semibold text-blue-700">
+            </div>
           </div>
-          <div>
-            <label class="block text-slate-600 mb-1">Planning (เป้า 0.035)</label>
-            <input type="number" step="0.0001" id="inputWastePlan" required class="w-full bg-slate-50 border rounded-lg p-2">
+
+          <!-- 2. Planning -->
+          <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
+            <span class="font-bold text-slate-700 block text-[11px]">2. Planning (เป้า 0.035)</span>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">Rate (% หรือ อัตราส่วน)</label>
+              <input type="number" step="0.0001" id="inputWastePlan" required placeholder="เช่น 0.0330" class="w-full bg-white border rounded-lg p-1.5 text-xs">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">น้ำหนัก (กก.)</label>
+              <input type="number" step="1" id="inputWastePlanKg" required placeholder="กก." oninput="calculateTotals()" class="w-full bg-white border rounded-lg p-1.5 text-xs font-semibold text-blue-700">
+            </div>
           </div>
-          <div>
-            <label class="block text-slate-600 mb-1">RM (เป้า 0.0158)</label>
-            <input type="number" step="0.0001" id="inputWasteRM" required class="w-full bg-slate-50 border rounded-lg p-2">
+
+          <!-- 3. RM -->
+          <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
+            <span class="font-bold text-slate-700 block text-[11px]">3. RM วัตถุดิบ (เป้า 0.0158)</span>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">Rate (% หรือ อัตราส่วน)</label>
+              <input type="number" step="0.0001" id="inputWasteRM" required placeholder="เช่น 0.0170" class="w-full bg-white border rounded-lg p-1.5 text-xs">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">น้ำหนัก (กก.)</label>
+              <input type="number" step="1" id="inputWasteRMKg" required placeholder="กก." oninput="calculateTotals()" class="w-full bg-white border rounded-lg p-1.5 text-xs font-semibold text-blue-700">
+            </div>
           </div>
-          <div>
-            <label class="block text-slate-600 mb-1">Diff Waste (เป้า 0.0086)</label>
-            <input type="number" step="0.0001" id="inputDiffWaste" required class="w-full bg-slate-50 border rounded-lg p-2">
+
+          <!-- 4. Diff Waste -->
+          <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
+            <span class="font-bold text-slate-700 block text-[11px]">4. Diff Waste (เป้า 0.0086)</span>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">Rate (% หรือ อัตราส่วน)</label>
+              <input type="number" step="0.0001" id="inputDiffWaste" required placeholder="เช่น 0.0120" class="w-full bg-white border rounded-lg p-1.5 text-xs">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">น้ำหนัก (กก.)</label>
+              <input type="number" step="1" id="inputDiffWasteKg" required placeholder="กก." oninput="calculateTotals()" class="w-full bg-white border rounded-lg p-1.5 text-xs font-semibold text-blue-700">
+            </div>
           </div>
         </div>
 
-        <div class="border-t pt-3 font-semibold text-slate-800 text-sm">ข้อมูลผลรวมจริง (Total Value & Weight)</div>
+        <div class="border-t pt-3 font-semibold text-slate-800 text-sm flex items-center justify-between">
+          <span>ข้อมูลผลรวมจริง (Total Value & Weight)</span>
+          <span class="text-[11px] font-normal text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">คำนวณอัตโนมัติจากน้ำหนักและราคาซื้อจริง</span>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-slate-600 mb-1">มูลค่าของเสียรวม (บาท)</label>
-            <input type="number" step="0.01" id="inputTotalWasteVal" required class="w-full bg-slate-50 border rounded-lg p-2">
+          <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-200">
+            <label class="block text-slate-700 font-semibold mb-1">น้ำหนักของเสียรวม (กก.) <span class="text-blue-600 font-normal text-[11px]">(รวมทุกส่วนงาน)</span></label>
+            <input type="number" step="1" id="inputTotalWasteKg" required oninput="calculateFromTotal()" class="w-full bg-white border border-blue-300 rounded-lg p-2 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500">
+            <span class="text-[10px] text-slate-500 mt-1 block">Production + Planning + RM + Diff Waste</span>
           </div>
-          <div>
-            <label class="block text-slate-600 mb-1">น้ำหนักของเสียรวม (กก.)</label>
-            <input type="number" step="1" id="inputTotalWasteKg" required class="w-full bg-slate-50 border rounded-lg p-2">
+          <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-200">
+            <label class="block text-slate-700 font-semibold mb-1">มูลค่าของเสียรวม (บาท) <span class="text-emerald-700 font-normal text-[11px]">(กก.รวม × ราคาซื้อจริง)</span></label>
+            <input type="number" step="0.01" id="inputTotalWasteVal" required class="w-full bg-white border border-emerald-300 rounded-lg p-2 text-sm font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500">
+            <span class="text-[10px] text-slate-500 mt-1 block">คำนวณจาก: น้ำหนักของเสียรวม × ราคาซื้อจริง</span>
           </div>
         </div>
 
@@ -717,7 +912,7 @@
 
     // SWITCH TABS
     function switchTab(tabId) {
-      ['deptCharts', 'dashboard', 'weekly', 'rawdata'].forEach(t => {
+      ['deptCharts', 'monthly', 'dashboard', 'weekly', 'rawdata'].forEach(t => {
         const content = document.getElementById(`tabContent-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
         if (t === tabId) {
@@ -731,6 +926,10 @@
 
       if (tabId === 'deptCharts') {
         renderDeptCharts();
+      } else if (tabId === 'monthly') {
+        populateMonthSelector();
+        renderMonthlySummary();
+        renderYearMatrix();
       } else if (tabId === 'dashboard') {
         initOverviewCharts();
       } else if (tabId === 'weekly') {
@@ -766,6 +965,50 @@
       `;
     }
 
+    // Custom inline plugin วาดตัวเลขอยู่ "เหนือหัวแท่งกราฟ" ทุกแท่ง
+    // ถ้าได้ตามเป้าหมาย -> ตัวเลขสีดำ (#0f172a)
+    // ถ้าเกินเป้าหมาย (หรือไม่ผ่านเกณฑ์) -> ตัวเลขสีแดงสด (#dc2626) หนาชัดเจน
+    const barLabelsPlugin = {
+      id: 'barLabelsPlugin',
+      afterDatasetsDraw(chart, args, options) {
+        const { ctx, chartArea } = chart;
+        const meta = chart.getDatasetMeta(0); // dataset 0 คือ Actual bar
+        if (!meta || meta.hidden) return;
+
+        const isPct = options && options.isPercentage;
+        const lowerBetter = options ? options.lowerBetter : true;
+        const targetVal = options ? options.targetVal : 0;
+
+        ctx.save();
+        ctx.font = '700 11.5px Sarabun, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+
+        meta.data.forEach((bar, index) => {
+          const val = chart.data.datasets[0].data[index];
+          if (val === null || val === undefined) return;
+
+          const text = val + (isPct ? '%' : ' ฿');
+          
+          // เช็คว่าผ่านเป้าหมายหรือเกินเป้าหมาย
+          const numVal = Number(val);
+          const isFail = lowerBetter ? (numVal > targetVal) : (numVal < targetVal);
+
+          // วางตัวเลขเหนือหัวแท่งกราฟ
+          let textY = bar.y - 3;
+          if (chartArea && textY < chartArea.top + 10) {
+            textY = chartArea.top + 10;
+          }
+
+          // ถ้าได้เป้าหมาย -> สีดำเข้มคมชัด (#0f172a)
+          // ถ้าเกินเป้าหมาย -> สีแดง (#dc2626)
+          ctx.fillStyle = isFail ? '#dc2626' : '#0f172a';
+          ctx.fillText(text, bar.x, textY);
+        });
+        ctx.restore();
+      }
+    };
+
     // ==========================================
     // RENDER ALL 8 DEPARTMENT CHARTS (TAB 1)
     // ==========================================
@@ -777,11 +1020,12 @@
         const ctx = document.getElementById(canvasId).getContext('2d');
         if (charts[chartKey]) charts[chartKey].destroy();
 
-        const formattedActual = actualData.map(v => isPercentage ? (v * 100).toFixed(2) : v.toFixed(2));
-        const formattedTarget = actualData.map(() => isPercentage ? (targetVal * 100).toFixed(2) : targetVal.toFixed(2));
+        const formattedActual = actualData.map(v => isPercentage ? Number((v * 100).toFixed(2)) : Number(v.toFixed(2)));
+        const formattedTarget = actualData.map(() => isPercentage ? Number((targetVal * 100).toFixed(2)) : Number(targetVal.toFixed(2)));
 
         charts[chartKey] = new Chart(ctx, {
           type: 'bar',
+          plugins: [barLabelsPlugin],
           data: {
             labels: labels,
             datasets: [
@@ -810,8 +1054,18 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+              padding: {
+                top: 25
+              }
+            },
             plugins: {
               legend: { display: false },
+              barLabelsPlugin: {
+                isPercentage: isPercentage,
+                targetVal: isPercentage ? Number((targetVal * 100).toFixed(2)) : Number(targetVal.toFixed(2)),
+                lowerBetter: lowerBetter
+              },
               tooltip: {
                 callbacks: {
                   label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}${isPercentage ? '%' : ' ฿'}`
@@ -820,7 +1074,8 @@
             },
             scales: {
               y: {
-                beginAtZero: isPercentage,
+                beginAtZero: true,
+                grace: '15%',
                 ticks: {
                   callback: function(v) {
                     return Number(v).toFixed(2) + (isPercentage ? '%' : ' ฿');
@@ -1167,8 +1422,6 @@
           <td class="py-3 px-3 text-right ${d.wastePlanActual > d.wastePlanTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wastePlanActual*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-right ${d.wasteRMActual > d.wasteRMTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wasteRMActual*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-right font-bold ${d.diffWasteActual > d.diffWasteTarget ? 'text-rose-600' : 'text-slate-600'}">${(d.diffWasteActual*100).toFixed(2)}%</td>
-          <td class="py-3 px-3 text-right text-rose-600 font-bold">${fmtMoney(d.totalExcessVal)}</td>
-          <td class="py-3 px-3 text-right font-bold text-slate-800">${fmtMoney(d.totalWasteVal)}</td>
           <td class="py-3 px-3 text-center space-x-1">
             <button onclick="editRecord(${i})" title="แก้ไข" class="p-1 hover:text-blue-600 text-slate-400"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
             <button onclick="deleteRecord(${i})" title="ลบ" class="p-1 hover:text-rose-600 text-slate-400"><i data-lucide="trash" class="w-4 h-4"></i></button>
@@ -1179,6 +1432,32 @@
     }
 
     // MODAL ACTIONS
+    // ฟังก์ชันคำนวณน้ำหนักของเสียรวม และมูลค่าของเสียรวม อัตโนมัติ
+    function calculateTotals() {
+      const prodKg = parseFloat(document.getElementById('inputWasteProdKg').value) || 0;
+      const planKg = parseFloat(document.getElementById('inputWastePlanKg').value) || 0;
+      const rmKg = parseFloat(document.getElementById('inputWasteRMKg').value) || 0;
+      const diffKg = parseFloat(document.getElementById('inputDiffWasteKg').value) || 0;
+      const buyPrice = parseFloat(document.getElementById('inputBuyPrice').value) || 0;
+
+      const totalKg = Math.round(prodKg + planKg + rmKg + diffKg);
+      document.getElementById('inputTotalWasteKg').value = totalKg > 0 ? totalKg : '';
+
+      if (totalKg > 0 && buyPrice > 0) {
+        const totalVal = Math.round((totalKg * buyPrice) * 100) / 100;
+        document.getElementById('inputTotalWasteVal').value = totalVal;
+      }
+    }
+
+    // กรณีผู้ใช้กรอกหรือแก้น้ำหนักรวมโดยตรง ให้ช่วยคำนวณมูลค่ารวมด้วยราคาซื้อ
+    function calculateFromTotal() {
+      const totalKg = parseFloat(document.getElementById('inputTotalWasteKg').value) || 0;
+      const buyPrice = parseFloat(document.getElementById('inputBuyPrice').value) || 0;
+      if (totalKg > 0 && buyPrice > 0) {
+        document.getElementById('inputTotalWasteVal').value = Math.round((totalKg * buyPrice) * 100) / 100;
+      }
+    }
+
     function openModal(id) {
       document.getElementById('editIndex').value = "-1";
       document.getElementById('modalTitle').innerHTML = `<i data-lucide="calendar-plus" class="w-5 h-5 text-blue-600"></i> บันทึกข้อมูลประจำสัปดาห์ใหม่`;
@@ -1190,12 +1469,20 @@
         document.getElementById('inputMonth').value = last.month;
         document.getElementById('inputYear').value = last.year;
         document.getElementById('inputBuyPrice').value = 18.20;
+        document.getElementById('inputBuyKg').value = '';
         document.getElementById('inputSellPrice').value = 25.50;
+        document.getElementById('inputSellKg').value = '';
         document.getElementById('inputPaperCost').value = 0.7900;
         document.getElementById('inputWasteProd').value = 0.0470;
         document.getElementById('inputWastePlan').value = 0.0330;
         document.getElementById('inputWasteRM').value = 0.0170;
         document.getElementById('inputDiffWaste').value = 0.0120;
+        document.getElementById('inputWasteProdKg').value = '';
+        document.getElementById('inputWastePlanKg').value = '';
+        document.getElementById('inputWasteRMKg').value = '';
+        document.getElementById('inputDiffWasteKg').value = '';
+        document.getElementById('inputTotalWasteKg').value = '';
+        document.getElementById('inputTotalWasteVal').value = '';
       }
       document.getElementById(id).classList.remove('hidden');
       lucide.createIcons();
@@ -1214,12 +1501,18 @@
       document.getElementById('inputMonth').value = d.month;
       document.getElementById('inputYear').value = d.year;
       document.getElementById('inputBuyPrice').value = d.buyActual;
+      document.getElementById('inputBuyKg').value = d.buyKg || '';
       document.getElementById('inputSellPrice').value = d.sellActual;
+      document.getElementById('inputSellKg').value = d.sellKg || '';
       document.getElementById('inputPaperCost').value = d.paperCostActual;
       document.getElementById('inputWasteProd').value = d.wasteProdActual;
+      document.getElementById('inputWasteProdKg').value = d.wasteProdKg || Math.round((d.totalWasteKg || 0) * 0.23);
       document.getElementById('inputWastePlan').value = d.wastePlanActual;
+      document.getElementById('inputWastePlanKg').value = d.wastePlanKg || Math.round((d.totalWasteKg || 0) * 0.17);
       document.getElementById('inputWasteRM').value = d.wasteRMActual;
+      document.getElementById('inputWasteRMKg').value = d.wasteRMKg || Math.round((d.totalWasteKg || 0) * 0.11);
       document.getElementById('inputDiffWaste').value = d.diffWasteActual;
+      document.getElementById('inputDiffWasteKg').value = d.diffWasteKg || Math.round((d.totalWasteKg || 0) * 0.49);
       document.getElementById('inputTotalWasteVal').value = d.totalWasteVal;
       document.getElementById('inputTotalWasteKg').value = d.totalWasteKg;
 
@@ -1239,18 +1532,35 @@
       e.preventDefault();
       const editIdx = parseInt(document.getElementById('editIndex').value);
       
+      const buyPrice = parseFloat(document.getElementById('inputBuyPrice').value);
+      const buyKg = parseFloat(document.getElementById('inputBuyKg').value) || 0;
+      const sellPrice = parseFloat(document.getElementById('inputSellPrice').value);
+      const sellKg = parseFloat(document.getElementById('inputSellKg').value) || 0;
       const prodAct = parseFloat(document.getElementById('inputWasteProd').value);
       const planAct = parseFloat(document.getElementById('inputWastePlan').value);
       const rmAct = parseFloat(document.getElementById('inputWasteRM').value);
       const diffAct = parseFloat(document.getElementById('inputDiffWaste').value);
-      const totalWaste = parseFloat(document.getElementById('inputTotalWasteVal').value);
-      const totalKg = parseInt(document.getElementById('inputTotalWasteKg').value);
+
+      const prodKg = parseFloat(document.getElementById('inputWasteProdKg').value) || 0;
+      const planKg = parseFloat(document.getElementById('inputWastePlanKg').value) || 0;
+      const rmKg = parseFloat(document.getElementById('inputWasteRMKg').value) || 0;
+      const diffKg = parseFloat(document.getElementById('inputDiffWasteKg').value) || 0;
+
+      let totalKg = parseInt(document.getElementById('inputTotalWasteKg').value);
+      if (!totalKg || isNaN(totalKg)) {
+        totalKg = Math.round(prodKg + planKg + rmKg + diffKg);
+      }
+
+      let totalWaste = parseFloat(document.getElementById('inputTotalWasteVal').value);
+      if (!totalWaste || isNaN(totalWaste)) {
+        totalWaste = Math.round((totalKg * buyPrice) * 100) / 100;
+      }
 
       let excess = 0;
-      if (diffAct > 0.0086) excess += totalWaste * 0.45 * ((diffAct - 0.0086)/diffAct);
-      if (rmAct > 0.0158) excess += totalWaste * 0.15 * ((rmAct - 0.0158)/rmAct);
-      if (prodAct > 0.05) excess += totalWaste * 0.20 * ((prodAct - 0.05)/prodAct);
-      if (planAct > 0.035) excess += totalWaste * 0.18 * ((planAct - 0.035)/planAct);
+      if (diffAct > 0.0086) excess += (diffKg > 0 ? diffKg * buyPrice : totalWaste * 0.45) * ((diffAct - 0.0086)/diffAct);
+      if (rmAct > 0.0158) excess += (rmKg > 0 ? rmKg * buyPrice : totalWaste * 0.15) * ((rmAct - 0.0158)/rmAct);
+      if (prodAct > 0.05) excess += (prodKg > 0 ? prodKg * buyPrice : totalWaste * 0.20) * ((prodAct - 0.05)/prodAct);
+      if (planAct > 0.035) excess += (planKg > 0 ? planKg * buyPrice : totalWaste * 0.18) * ((planAct - 0.035)/planAct);
 
       const record = {
         week: parseInt(document.getElementById('inputWeek').value),
@@ -1258,31 +1568,33 @@
         month: parseInt(document.getElementById('inputMonth').value),
         year: parseInt(document.getElementById('inputYear').value),
         buyTarget: 18.3,
-        buyActual: parseFloat(document.getElementById('inputBuyPrice').value),
+        buyActual: buyPrice,
+        buyKg: buyKg,
         sellTarget: 25.7,
-        sellActual: parseFloat(document.getElementById('inputSellPrice').value),
+        sellActual: sellPrice,
+        sellKg: sellKg,
         paperCostTarget: 0.7902,
         paperCostActual: parseFloat(document.getElementById('inputPaperCost').value),
         wasteProdTarget: 0.05,
         wasteProdActual: prodAct,
-        wasteProdVal: totalWaste * 0.22,
-        wasteProdKg: Math.round(totalKg * 0.23),
+        wasteProdVal: prodKg > 0 ? Math.round(prodKg * buyPrice * 100)/100 : totalWaste * 0.22,
+        wasteProdKg: prodKg > 0 ? prodKg : Math.round(totalKg * 0.23),
         wastePlanTarget: 0.035,
         wastePlanActual: planAct,
-        wastePlanVal: totalWaste * 0.17,
-        wastePlanKg: Math.round(totalKg * 0.17),
+        wastePlanVal: planKg > 0 ? Math.round(planKg * buyPrice * 100)/100 : totalWaste * 0.17,
+        wastePlanKg: planKg > 0 ? planKg : Math.round(totalKg * 0.17),
         wasteRMTarget: 0.0158,
         wasteRMActual: rmAct,
-        wasteRMVal: totalWaste * 0.10,
-        wasteRMKg: Math.round(totalKg * 0.11),
+        wasteRMVal: rmKg > 0 ? Math.round(rmKg * buyPrice * 100)/100 : totalWaste * 0.10,
+        wasteRMKg: rmKg > 0 ? rmKg : Math.round(totalKg * 0.11),
         wasteMktTarget: 0.0004,
         wasteMktActual: 0.0001,
         wasteMktVal: 3000,
         wasteMktKg: 150,
         diffWasteTarget: 0.0086,
         diffWasteActual: diffAct,
-        diffWasteVal: totalWaste * 0.48,
-        diffWasteKg: Math.round(totalKg * 0.49),
+        diffWasteVal: diffKg > 0 ? Math.round(diffKg * buyPrice * 100)/100 : totalWaste * 0.48,
+        diffWasteKg: diffKg > 0 ? diffKg : Math.round(totalKg * 0.49),
         totalWasteVal: totalWaste,
         totalExcessVal: Math.round(excess),
         totalWasteKg: totalKg,
@@ -1315,12 +1627,226 @@
       a.click();
     }
 
+    // MONTH NAMES IN THAI
+    const MONTH_NAMES = [
+      "", "มกราคม (ม.ค.)", "กุมภาพันธ์ (ก.พ.)", "มีนาคม (มี.ค.)", "เมษายน (เม.ย.)",
+      "พฤษภาคม (พ.ค.)", "มิถุนายน (มิ.ย.)", "กรกฎาคม (ก.ค.)", "สิงหาคม (ส.ค.)",
+      "กันยายน (ก.ย.)", "ตุลาคม (ต.ค.)", "พฤศจิกายน (พ.ย.)", "ธันวาคม (ธ.ค.)"
+    ];
+    const MONTH_SHORT = [
+      "", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+    ];
+
+    function populateMonthSelector() {
+      const select = document.getElementById('monthlyMonthSelect');
+      if (!select) return;
+      // Extract unique months present in dataset
+      const months = [...new Set(dataset.map(d => d.month))].sort((a,b) => a - b);
+      if (months.length === 0) months.push(10);
+      
+      const currentVal = parseInt(select.value) || months[months.length - 1];
+      select.innerHTML = months.map(m => `
+        <option value="${m}" ${m === currentVal ? 'selected' : ''}>เดือน ${m}: ${MONTH_NAMES[m] || 'เดือน '+m}</option>
+      `).join('');
+    }
+
+    function renderMonthlySummary() {
+      const select = document.getElementById('monthlyMonthSelect');
+      const selectedMonth = parseInt(select ? select.value : 10) || 10;
+      const monthRows = dataset.filter(d => d.month === selectedMonth);
+      const n = monthRows.length;
+
+      document.getElementById('monthlyWeekCountBadge').innerText = `${n} สัปดาห์ที่บันทึก (Week ${monthRows.map(r => r.week).join(', ') || '-'})`;
+
+      if (n === 0) {
+        document.getElementById('monthlyTableBody').innerHTML = `
+          <tr><td colspan="8" class="py-6 text-center text-slate-400">ไม่มีข้อมูลสัปดาห์ในเดือนนี้</td></tr>
+        `;
+        return;
+      }
+
+      // Calculate Averages and Sums
+      const avgBuy = monthRows.reduce((s, r) => s + r.buyActual, 0) / n;
+      const avgSell = monthRows.reduce((s, r) => s + r.sellActual, 0) / n;
+      const avgPC = monthRows.reduce((s, r) => s + r.paperCostActual, 0) / n;
+      const avgProd = monthRows.reduce((s, r) => s + r.wasteProdActual, 0) / n;
+      const avgPlan = monthRows.reduce((s, r) => s + r.wastePlanActual, 0) / n;
+      const avgRM = monthRows.reduce((s, r) => s + r.wasteRMActual, 0) / n;
+      const avgMkt = monthRows.reduce((s, r) => s + r.wasteMktActual, 0) / n;
+      const avgDiff = monthRows.reduce((s, r) => s + r.diffWasteActual, 0) / n;
+
+      // รวม % Waste เฉลี่ย (Prod + Plan + RM + Mkt + Diff)
+      const avgTotalWasteRate = avgProd + avgPlan + avgRM + avgMkt + avgDiff;
+      const targetTotalWasteRate = 0.05 + 0.035 + 0.0158 + 0.0004 + 0.0086; // 0.1098 หรือ 10.98%
+
+      const sumProdVal = monthRows.reduce((s, r) => s + (r.wasteProdVal || 0), 0);
+      const sumPlanVal = monthRows.reduce((s, r) => s + (r.wastePlanVal || 0), 0);
+      const sumRMVal = monthRows.reduce((s, r) => s + (r.wasteRMVal || 0), 0);
+      const sumMktVal = monthRows.reduce((s, r) => s + (r.wasteMktVal || 0), 0);
+      const sumDiffVal = monthRows.reduce((s, r) => s + (r.diffWasteVal || 0), 0);
+
+      const sumTotalWaste = monthRows.reduce((s, r) => s + (r.totalWasteVal || 0), 0);
+      const sumTotalExcess = monthRows.reduce((s, r) => s + (r.totalExcessVal || 0), 0);
+
+      // Top mini KPI cards
+      document.getElementById('monKpiBuy').innerText = avgBuy.toFixed(2) + ' ฿';
+      document.getElementById('monKpiBuyStatus').innerHTML = `เป้า 18.30 ฿ (${avgBuy <= 18.30 ? 'ต่ำกว่าเป้า ✓' : 'สูงกว่าเป้า ✕'})`;
+      
+      document.getElementById('monKpiSell').innerText = avgSell.toFixed(2) + ' ฿';
+      document.getElementById('monKpiSellStatus').innerHTML = `เป้า 25.70 ฿ (${avgSell >= 25.70 ? 'ตามเป้า ✓' : 'ต่ำกว่าเป้า ✕'})`;
+      
+      document.getElementById('monKpiPC').innerText = (avgPC * 100).toFixed(2) + '%';
+      document.getElementById('monKpiPCStatus').innerHTML = `เป้า 79.02% (${avgPC <= 0.7902 ? 'ต่ำกว่าเป้า ✓' : 'สูงกว่าเป้า ✕'})`;
+      
+      // เพิ่มแสดง % Waste เฉลี่ย ต่อท้าย % Paper Cost
+      if (document.getElementById('monKpiWastePct')) {
+        document.getElementById('monKpiWastePct').innerText = (avgTotalWasteRate * 100).toFixed(2) + '%';
+        const isWasteOver = avgTotalWasteRate > targetTotalWasteRate;
+        document.getElementById('monKpiWasteStatus').innerHTML = `เป้า 10.98% (${isWasteOver ? '<span class="text-rose-600 font-semibold">สูงกว่าเป้า ✕</span>' : '<span class="text-emerald-600 font-semibold">ผ่านเป้า ✓</span>'})`;
+      }
+
+      document.getElementById('monKpiExcess').innerText = fmtMoney(sumTotalExcess);
+      if (document.getElementById('monKpiWasteTotalVal')) {
+        document.getElementById('monKpiWasteTotalVal').innerText = `ของเสียรวม ${fmtMoney(sumTotalWaste)}`;
+      }
+
+      // Target definitions
+      const monTopics = [
+        { name: '1. ราคาซื้อ / จัดซื้อ', owner: 'ภัทร / พลอย', target: 18.30, avg: avgBuy, isPct: false, lowerBetter: true, totalVal: 0, excessVal: 0 },
+        { name: '2. ราคาขาย / ตลาด', owner: 'พี่หญิง / เนย', target: 25.70, avg: avgSell, isPct: false, lowerBetter: false, totalVal: 0, excessVal: 0 },
+        { name: '3. % Paper Cost', owner: 'ทุกแผนก', target: 0.7902, avg: avgPC, isPct: true, lowerBetter: true, totalVal: 0, excessVal: 0 },
+        { name: '4. Waste / Production', owner: 'ดล / ปัญญา / อาทร์', target: 0.05, avg: avgProd, isPct: true, lowerBetter: true, totalVal: sumProdVal, excessVal: avgProd > 0.05 ? sumProdVal * ((avgProd - 0.05)/avgProd) : 0 },
+        { name: '5. Waste / Planning', owner: 'พี่เก่ง / ปลา', target: 0.035, avg: avgPlan, isPct: true, lowerBetter: true, totalVal: sumPlanVal, excessVal: avgPlan > 0.035 ? sumPlanVal * ((avgPlan - 0.035)/avgPlan) : 0 },
+        { name: '6. Waste / RM', owner: 'พี่ไก่ / แบม', target: 0.0158, avg: avgRM, isPct: true, lowerBetter: true, totalVal: sumRMVal, excessVal: avgRM > 0.0158 ? sumRMVal * ((avgRM - 0.0158)/avgRM) : 0 },
+        { name: '7. Waste / Marketing', owner: 'ส้ม / เตย', target: 0.0004, avg: avgMkt, isPct: true, lowerBetter: true, totalVal: sumMktVal, excessVal: avgMkt > 0.0004 ? sumMktVal * ((avgMkt - 0.0004)/avgMkt) : 0 },
+        { name: '8. Diff Waste', owner: 'นุ่น / พี่ไก่', target: 0.0086, avg: avgDiff, isPct: true, lowerBetter: true, totalVal: sumDiffVal, excessVal: avgDiff > 0.0086 ? sumDiffVal * ((avgDiff - 0.0086)/avgDiff) : 0 }
+      ];
+
+      let overCount = 0;
+      const tbody = document.getElementById('monthlyTableBody');
+      tbody.innerHTML = monTopics.map(t => {
+        const diff = t.avg - t.target;
+        const isFail = t.lowerBetter ? (t.avg > t.target) : (t.avg < t.target);
+        if (isFail) overCount++;
+
+        const targetDisp = t.isPct ? (t.target * 100).toFixed(2) + '%' : t.target.toFixed(2) + ' ฿';
+        const avgDisp = t.isPct ? (t.avg * 100).toFixed(2) + '%' : t.avg.toFixed(2) + ' ฿';
+        const diffDisp = (diff > 0 ? '+' : '') + (t.isPct ? (diff * 100).toFixed(2) + '%' : diff.toFixed(2) + ' ฿');
+
+        return `
+          <tr class="${isFail ? 'bg-rose-50/40 hover:bg-rose-50/70' : 'hover:bg-slate-50'} transition">
+            <td class="py-3 px-4 font-bold text-slate-800">${t.name}</td>
+            <td class="py-3 px-4 text-slate-500">${t.owner}</td>
+            <td class="py-3 px-4 text-right font-medium text-slate-600">${targetDisp}</td>
+            <td class="py-3 px-4 text-right font-bold ${isFail ? 'text-rose-600' : 'text-emerald-700'}">${avgDisp}</td>
+            <td class="py-3 px-4 text-right text-slate-500 font-medium">${diffDisp}</td>
+            <td class="py-3 px-4 text-center">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${isFail ? 'badge-bad' : 'badge-good'}">
+                ${isFail ? '✕ เฉลี่ยเกินเป้า' : '✓ เฉลี่ยผ่านเป้า'}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right text-slate-700 font-medium">${t.totalVal > 0 ? fmtMoney(t.totalVal) : '-'}</td>
+            <td class="py-3 px-4 text-right font-bold ${t.excessVal > 0 ? 'text-rose-600' : 'text-slate-400'}">
+              ${t.excessVal > 0 ? fmtMoney(t.excessVal) : '฿0.00'}
+            </td>
+          </tr>
+        `;
+      }).join('') + `
+        <tr class="bg-slate-100 font-bold border-t-2 border-slate-300">
+          <td colspan="6" class="py-3 px-4 text-right text-slate-800">รวมมูลค่าของเสียทั้งเดือน (บาท):</td>
+          <td class="py-3 px-4 text-right text-slate-900">${fmtMoney(sumTotalWaste)}</td>
+          <td class="py-3 px-4 text-right text-rose-600">${fmtMoney(sumTotalExcess)}</td>
+        </tr>
+      `;
+
+      document.getElementById('monthlyOverCountBadge').innerText = `เกินเป้าเฉลี่ย ${overCount} หัวข้อ`;
+    }
+
+    function renderYearMatrix() {
+      const tbody = document.getElementById('yearMatrixTableBody');
+      if (!tbody) return;
+
+      let html = '';
+      let yearlyWasteSum = 0;
+      let yearlyExcessSum = 0;
+
+      for (let m = 1; m <= 12; m++) {
+        const rows = dataset.filter(d => d.month === m);
+        const hasData = rows.length > 0;
+        const n = rows.length;
+
+        if (hasData) {
+          const avgBuy = rows.reduce((s, r) => s + r.buyActual, 0) / n;
+          const avgSell = rows.reduce((s, r) => s + r.sellActual, 0) / n;
+          const avgPC = rows.reduce((s, r) => s + r.paperCostActual, 0) / n;
+          const avgProd = rows.reduce((s, r) => s + r.wasteProdActual, 0) / n;
+          const avgPlan = rows.reduce((s, r) => s + r.wastePlanActual, 0) / n;
+          const avgRM = rows.reduce((s, r) => s + r.wasteRMActual, 0) / n;
+          const avgMkt = rows.reduce((s, r) => s + (r.wasteMktActual || 0), 0) / n;
+          const avgDiff = rows.reduce((s, r) => s + r.diffWasteActual, 0) / n;
+          const avgTotalWaste = avgProd + avgPlan + avgRM + avgMkt + avgDiff;
+          const mTotalWaste = rows.reduce((s, r) => s + r.totalWasteVal, 0);
+          const mTotalExcess = rows.reduce((s, r) => s + r.totalExcessVal, 0);
+
+          yearlyWasteSum += mTotalWaste;
+          yearlyExcessSum += mTotalExcess;
+
+          html += `
+            <tr class="hover:bg-slate-50 transition bg-emerald-50/20">
+              <td class="py-3 px-3 font-bold text-slate-900 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> ${MONTH_SHORT[m]} (${n} Wk)
+              </td>
+              <td class="py-3 px-3 text-right font-medium ${avgBuy > 18.30 ? 'text-rose-600' : 'text-emerald-700'}">${avgBuy.toFixed(2)}</td>
+              <td class="py-3 px-3 text-right font-medium ${avgSell < 25.70 ? 'text-amber-600' : 'text-slate-700'}">${avgSell.toFixed(2)}</td>
+              <td class="py-3 px-3 text-right font-semibold ${avgPC > 0.7902 ? 'text-rose-600' : 'text-emerald-700'}">${(avgPC*100).toFixed(2)}%</td>
+              <td class="py-3 px-3 text-right font-bold ${avgTotalWaste > 0.1098 ? 'text-rose-600 bg-rose-50/50' : 'text-emerald-700'}">${(avgTotalWaste*100).toFixed(2)}%</td>
+              <td class="py-3 px-3 text-right ${avgProd > 0.05 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(avgProd*100).toFixed(2)}%</td>
+              <td class="py-3 px-3 text-right ${avgPlan > 0.035 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(avgPlan*100).toFixed(2)}%</td>
+              <td class="py-3 px-3 text-right ${avgRM > 0.0158 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(avgRM*100).toFixed(2)}%</td>
+              <td class="py-3 px-3 text-right ${avgDiff > 0.0086 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(avgDiff*100).toFixed(2)}%</td>
+              <td class="py-3 px-3 text-right font-bold text-rose-600">${fmtMoney(mTotalExcess)}</td>
+              <td class="py-3 px-3 text-right font-bold text-slate-800">${fmtMoney(mTotalWaste)}</td>
+            </tr>
+          `;
+        } else {
+          html += `
+            <tr class="hover:bg-slate-50 text-slate-400">
+              <td class="py-2.5 px-3 font-medium text-slate-500">${MONTH_SHORT[m]}</td>
+              <td class="py-2.5 px-3 text-right">-</td>
+              <td class="py-2.5 px-3 text-right">-</td>
+              <td class="py-2.5 px-3 text-right">-</td>
+              <td class="py-2.5 px-3 text-right">-</td>
+              <td class="py-2.5 px-3 text-right">-</td>
+              <td class="py-2.5 px-3 text-right">-</td>
+              <td class="py-2.5 px-3 text-right">-</td>
+              <td class="py-2.5 px-3 text-right">-</td>
+              <td class="py-2.5 px-3 text-right">฿0.00</td>
+              <td class="py-2.5 px-3 text-right">฿0.00</td>
+            </tr>
+          `;
+        }
+      }
+
+      html += `
+        <tr class="bg-slate-100 font-bold border-t-2 border-slate-300">
+          <td colspan="9" class="py-3 px-3 text-right text-slate-800">รวมทั้งปี 2026:</td>
+          <td class="py-3 px-3 text-right text-rose-600">${fmtMoney(yearlyExcessSum)}</td>
+          <td class="py-3 px-3 text-right text-slate-900">${fmtMoney(yearlyWasteSum)}</td>
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+    }
+
     function initApp() {
       updateKPIs();
       renderDeptCharts();
       populateWeekSelector();
       renderWeeklyDetail();
       renderRawTable();
+      populateMonthSelector();
+      renderMonthlySummary();
+      renderYearMatrix();
       lucide.createIcons();
     }
 
