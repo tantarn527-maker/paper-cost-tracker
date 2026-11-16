@@ -358,6 +358,30 @@
           </div>
         </div>
 
+        <!-- 9. Waste FG+LTS (พี่จิต / พี่อ้อ) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between mb-1">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-2 py-0.5 rounded">คลังสินค้า / FG</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">9. Waste FG+LTS</h4>
+                <p class="text-xs text-slate-500">ผู้รับผิดชอบ: <span class="font-semibold text-slate-700">พี่จิต / พี่อ้อ</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400">เป้าหมาย</span>
+                <p class="text-xs font-bold text-slate-700">0.02%</p>
+              </div>
+            </div>
+            <div class="h-48 mt-2">
+              <canvas id="deptChartFGLTS"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 pt-2.5 border-t border-slate-100 flex justify-between items-center text-[11px]">
+            <span class="text-slate-500">เฉลี่ย: <strong id="deptFGLTSAvg" class="text-slate-700">0.016%</strong></span>
+            <span id="deptFGLTSStatus" class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-semibold text-[10px]">✓ ผ่านเกณฑ์</span>
+          </div>
+        </div>
+
       </div>
 
       <!-- Comparative Summary Breakdown: Stacked Values by Department -->
@@ -374,6 +398,7 @@
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500"></span> Production</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-500"></span> Planning</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-pink-500"></span> RM</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-teal-500"></span> FG+LTS</span>
           </div>
         </div>
         <div class="h-56">
@@ -490,6 +515,7 @@
                 <th class="py-3 px-3 text-right">Planning</th>
                 <th class="py-3 px-3 text-right">RM</th>
                 <th class="py-3 px-3 text-right">Diff Waste</th>
+                <th class="py-3 px-3 text-right">FG+LTS</th>
                 <th class="py-3 px-3 text-right font-bold text-rose-600">ส่วนเกินเป้ารวม</th>
                 <th class="py-3 px-3 text-right font-bold">มูลค่าของเสียรวม</th>
               </tr>
@@ -642,6 +668,7 @@
                 <th class="py-3 px-3 text-right">Planning</th>
                 <th class="py-3 px-3 text-right">RM</th>
                 <th class="py-3 px-3 text-right">Diff Waste</th>
+                <th class="py-3 px-3 text-right">FG+LTS</th>
                 <th class="py-3 px-3 text-center">จัดการ</th>
               </tr>
             </thead>
@@ -732,7 +759,7 @@
           <span>อัตราส่วนและน้ำหนักของเสียแต่ละหน่วยงาน (Waste Rate & Kg)</span>
           <span class="text-[11px] font-normal text-slate-400">ใส่อัตราส่วนและน้ำหนักของแต่ละหน่วยงาน</span>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <!-- 1. Production -->
           <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
             <span class="font-bold text-slate-700 block text-[11px]">1. Production (เป้า 0.05)</span>
@@ -784,6 +811,19 @@
               <input type="number" step="1" id="inputDiffWasteKg" required placeholder="กก." oninput="calculateTotals()" class="w-full bg-white border rounded-lg p-1.5 text-xs font-semibold text-blue-700">
             </div>
           </div>
+
+          <!-- 5. Waste FG+LTS -->
+          <div class="bg-slate-50/70 p-2.5 rounded-xl border border-teal-200/80 space-y-1.5">
+            <span class="font-bold text-teal-800 block text-[11px]">5. Waste FG+LTS (เป้า 0.0002)</span>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">Rate (% หรือ อัตราส่วน)</label>
+              <input type="number" step="0.0001" id="inputWasteFGLTS" required placeholder="เช่น 0.0001" class="w-full bg-white border rounded-lg p-1.5 text-xs">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500 mb-0.5">น้ำหนัก (กก.)</label>
+              <input type="number" step="1" id="inputWasteFGLTSKg" required placeholder="กก." oninput="calculateTotals()" class="w-full bg-white border rounded-lg p-1.5 text-xs font-semibold text-teal-700">
+            </div>
+          </div>
         </div>
 
         <div class="border-t pt-3 font-semibold text-slate-800 text-sm flex items-center justify-between">
@@ -794,7 +834,7 @@
           <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-200">
             <label class="block text-slate-700 font-semibold mb-1">น้ำหนักของเสียรวม (กก.) <span class="text-blue-600 font-normal text-[11px]">(รวมทุกส่วนงาน)</span></label>
             <input type="number" step="1" id="inputTotalWasteKg" required oninput="calculateFromTotal()" class="w-full bg-white border border-blue-300 rounded-lg p-2 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500">
-            <span class="text-[10px] text-slate-500 mt-1 block">Production + Planning + RM + Diff Waste</span>
+            <span class="text-[10px] text-slate-500 mt-1 block">Production + Planning + RM + Diff Waste + FG+LTS</span>
           </div>
           <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-200">
             <label class="block text-slate-700 font-semibold mb-1">มูลค่าของเสียรวม (บาท) <span class="text-emerald-700 font-normal text-[11px]">(กก.รวม × ราคาซื้อจริง)</span></label>
@@ -827,6 +867,7 @@
         wastePlanTarget: 0.035, wastePlanActual: 0.0377, wastePlanVal: 599214.98, wastePlanKg: 32942,
         wasteRMTarget: 0.0158, wasteRMActual: 0.0181, wasteRMVal: 451093.81, wasteRMKg: 24799,
         wasteMktTarget: 0.0004, wasteMktActual: 0.00035, wasteMktVal: 5620.71, wasteMktKg: 309,
+        wasteFGLTSTarget: 0.0002, wasteFGLTSActual: 0.0001, wasteFGLTSVal: 2310.13, wasteFGLTSKg: 127,
         diffWasteTarget: 0.0086, diffWasteActual: 0.0166, diffWasteVal: 1662766.09, diffWasteKg: 91411,
         totalWasteVal: 3530788.14,
         totalExcessVal: 919050.41,
@@ -842,6 +883,7 @@
         wastePlanTarget: 0.035, wastePlanActual: 0.0332, wastePlanVal: 991335.80, wastePlanKg: 54469,
         wasteRMTarget: 0.0158, wasteRMActual: 0.0190, wasteRMVal: 560960.40, wasteRMKg: 30822,
         wasteMktTarget: 0.0004, wasteMktActual: 0.00018, wasteMktVal: 5278.00, wasteMktKg: 290,
+        wasteFGLTSTarget: 0.0002, wasteFGLTSActual: 0.0001, wasteFGLTSVal: 2202.20, wasteFGLTSKg: 121,
         diffWasteTarget: 0.0086, diffWasteActual: 0.0182, diffWasteVal: 2848118.00, diffWasteKg: 156490,
         totalWasteVal: 5798647.40,
         totalExcessVal: 1596781.54,
@@ -857,6 +899,7 @@
         wastePlanTarget: 0.035, wastePlanActual: 0.0329, wastePlanVal: 820423.57, wastePlanKg: 45103,
         wasteRMTarget: 0.0158, wasteRMActual: 0.0182, wasteRMVal: 451093.81, wasteRMKg: 24799,
         wasteMktTarget: 0.0004, wasteMktActual: 0.0, wasteMktVal: 0.0, wasteMktKg: 0,
+        wasteFGLTSTarget: 0.0002, wasteFGLTSActual: 0.0002, wasteFGLTSVal: 4110.94, wasteFGLTSKg: 226,
         diffWasteTarget: 0.0086, diffWasteActual: 0.0102, diffWasteVal: 2368028.77, diffWasteKg: 130183,
         totalWasteVal: 4812619.25,
         totalExcessVal: 430940.39,
@@ -872,6 +915,7 @@
         wastePlanTarget: 0.035, wastePlanActual: 0.0307, wastePlanVal: 808919.04, wastePlanKg: 44544,
         wasteRMTarget: 0.0158, wasteRMActual: 0.0167, wasteRMVal: 438854.56, wasteRMKg: 24166,
         wasteMktTarget: 0.0004, wasteMktActual: 0.000009, wasteMktVal: 1707.04, wasteMktKg: 94,
+        wasteFGLTSTarget: 0.0002, wasteFGLTSActual: 0.0001, wasteFGLTSVal: 1834.16, wasteFGLTSKg: 101,
         diffWasteTarget: 0.0086, diffWasteActual: 0.0160, diffWasteVal: 2485758.96, diffWasteKg: 136881,
         totalWasteVal: 4912116.56,
         totalExcessVal: 1173314.36,
@@ -887,6 +931,7 @@
         wastePlanTarget: 0.035, wastePlanActual: 0.0347, wastePlanVal: 951872.64, wastePlanKg: 52186,
         wasteRMTarget: 0.0158, wasteRMActual: 0.0205, wasteRMVal: 644856.96, wasteRMKg: 35354,
         wasteMktTarget: 0.0004, wasteMktActual: 0.00011, wasteMktVal: 3137.28, wasteMktKg: 172,
+        wasteFGLTSTarget: 0.0002, wasteFGLTSActual: 0.0003, wasteFGLTSVal: 6730.56, wasteFGLTSKg: 369,
         diffWasteTarget: 0.0086, diffWasteActual: 0.0129, diffWasteVal: 2724362.88, diffWasteKg: 149362,
         totalWasteVal: 5590997.76,
         totalExcessVal: 1055966.21,
@@ -896,6 +941,11 @@
     ];
 
     let dataset = JSON.parse(localStorage.getItem('paper_cost_data')) || DEFAULT_DATA;
+    // Auto-migrate cached localStorage if missing wasteFGLTS
+    if (dataset.length > 0 && dataset[0].wasteFGLTSActual === undefined) {
+      dataset = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      localStorage.setItem('paper_cost_data', JSON.stringify(dataset));
+    }
     let charts = {};
 
     function saveDataset() {
@@ -1111,7 +1161,23 @@
       // 8. Diff Waste (นุ่น / พี่ไก่) -> เป้า 0.86%
       drawDeptChart('deptChartDiff', 'deptDiff', dataset.map(d => d.diffWasteActual), 0.0086, '#6366f1', true, true);
 
-      // 9. Stacked Value Chart
+      // 9. Waste FG+LTS (พี่จิต / พี่อ้อ) -> เป้า 0.02%
+      drawDeptChart('deptChartFGLTS', 'deptFGLTS', dataset.map(d => d.wasteFGLTSActual || 0), 0.0002, '#0d9488', true, true);
+      const avgFGLTS = dataset.reduce((s, d) => s + (d.wasteFGLTSActual || 0), 0) / (dataset.length || 1);
+      const deptFGLTSAvgEl = document.getElementById('deptFGLTSAvg');
+      if (deptFGLTSAvgEl) deptFGLTSAvgEl.innerText = (avgFGLTS * 100).toFixed(3) + '%';
+      const deptFGLTSStatusEl = document.getElementById('deptFGLTSStatus');
+      if (deptFGLTSStatusEl) {
+        if (avgFGLTS <= 0.0002) {
+          deptFGLTSStatusEl.className = 'px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-semibold text-[10px]';
+          deptFGLTSStatusEl.innerText = '✓ ผ่านเกณฑ์';
+        } else {
+          deptFGLTSStatusEl.className = 'px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-semibold text-[10px]';
+          deptFGLTSStatusEl.innerText = 'หลุดเป้า +' + ((avgFGLTS - 0.0002)*100).toFixed(3) + '%';
+        }
+      }
+
+      // Stacked Value Chart
       const ctxStack = document.getElementById('deptChartStacked').getContext('2d');
       if (charts.deptStacked) charts.deptStacked.destroy();
       charts.deptStacked = new Chart(ctxStack, {
@@ -1122,7 +1188,8 @@
             { label: 'Diff Waste (นุ่น/พี่ไก่)', data: dataset.map(d => d.diffWasteVal), backgroundColor: '#6366f1' },
             { label: 'Production (ดล/ปัญญา)', data: dataset.map(d => d.wasteProdVal), backgroundColor: '#f59e0b' },
             { label: 'Planning (เก่ง/ปลา)', data: dataset.map(d => d.wastePlanVal), backgroundColor: '#3b82f6' },
-            { label: 'RM (พี่ไก่/แบม)', data: dataset.map(d => d.wasteRMVal), backgroundColor: '#ec4899' }
+            { label: 'RM (พี่ไก่/แบม)', data: dataset.map(d => d.wasteRMVal), backgroundColor: '#ec4899' },
+            { label: 'FG+LTS (พี่จิต/พี่อ้อ)', data: dataset.map(d => d.wasteFGLTSVal || 0), backgroundColor: '#0d9488' }
           ]
         },
         options: {
@@ -1224,17 +1291,18 @@
       const rmSum = dataset.reduce((s, d) => s + (d.wasteRMVal || 0), 0);
       const diffSum = dataset.reduce((s, d) => s + (d.diffWasteVal || 0), 0);
       const mktSum = dataset.reduce((s, d) => s + (d.wasteMktVal || 0), 0);
-      const totalDeptWaste = prodSum + planSum + rmSum + diffSum + mktSum;
+      const fgltsSum = dataset.reduce((s, d) => s + (d.wasteFGLTSVal || 0), 0);
+      const totalDeptWaste = prodSum + planSum + rmSum + diffSum + mktSum + fgltsSum;
 
       const ctx3 = document.getElementById('wastePieChart').getContext('2d');
       if (charts.wastePie) charts.wastePie.destroy();
       charts.wastePie = new Chart(ctx3, {
         type: 'doughnut',
         data: {
-          labels: ['Diff Waste', 'Production', 'Planning', 'RM', 'Marketing'],
+          labels: ['Diff Waste', 'Production', 'Planning', 'RM', 'Marketing', 'FG+LTS'],
           datasets: [{
-            data: [diffSum, prodSum, planSum, rmSum, mktSum],
-            backgroundColor: ['#6366f1', '#f59e0b', '#3b82f6', '#ec4899', '#10b981'],
+            data: [diffSum, prodSum, planSum, rmSum, mktSum, fgltsSum],
+            backgroundColor: ['#6366f1', '#f59e0b', '#3b82f6', '#ec4899', '#10b981', '#0d9488'],
             borderWidth: 2,
             borderColor: '#ffffff'
           }]
@@ -1254,7 +1322,8 @@
         { label: 'Production (ดล/ปัญญา)', val: prodSum, color: 'bg-amber-500' },
         { label: 'Planning (เก่ง/ปลา)', val: planSum, color: 'bg-blue-500' },
         { label: 'RM (พี่ไก่/แบม)', val: rmSum, color: 'bg-pink-500' },
-        { label: 'Marketing (ส้ม/เตย)', val: mktSum, color: 'bg-emerald-500' }
+        { label: 'Marketing (ส้ม/เตย)', val: mktSum, color: 'bg-emerald-500' },
+        { label: 'FG+LTS (พี่จิต/พี่อ้อ)', val: fgltsSum, color: 'bg-teal-600' }
       ];
       pieLegendDiv.innerHTML = pieCategories.map(c => `
         <div class="flex items-center justify-between text-[11px]">
@@ -1352,7 +1421,8 @@
         { name: '5. Waste / Planning', owner: 'พี่เก่ง/ปลา', target: data.wastePlanTarget, actual: data.wastePlanActual, type: 'waste', lowerBetter: true, kg: data.wastePlanKg, val: data.wastePlanVal, excess: data.wastePlanActual > data.wastePlanTarget ? (data.wastePlanVal * (data.wastePlanActual - data.wastePlanTarget)/data.wastePlanActual) : 0 },
         { name: '6. Waste / RM', owner: 'พี่ไก่ / แบม', target: data.wasteRMTarget, actual: data.wasteRMActual, type: 'waste', lowerBetter: true, kg: data.wasteRMKg, val: data.wasteRMVal, excess: data.wasteRMActual > data.wasteRMTarget ? (data.wasteRMVal * (data.wasteRMActual - data.wasteRMTarget)/data.wasteRMActual) : 0 },
         { name: '7. Waste / Marketing', owner: 'ส้ม / เตย', target: data.wasteMktTarget, actual: data.wasteMktActual, type: 'waste', lowerBetter: true, kg: data.wasteMktKg, val: data.wasteMktVal, excess: data.wasteMktActual > data.wasteMktTarget ? (data.wasteMktVal * (data.wasteMktActual - data.wasteMktTarget)/data.wasteMktActual) : 0 },
-        { name: '8. Diff Waste', owner: 'นุ่น /พี่ไก่', target: data.diffWasteTarget, actual: data.diffWasteActual, type: 'waste', lowerBetter: true, kg: data.diffWasteKg, val: data.diffWasteVal, excess: data.diffWasteActual > data.diffWasteTarget ? (data.diffWasteVal * (data.diffWasteActual - data.diffWasteTarget)/data.diffWasteActual) : 0 }
+        { name: '8. Diff Waste', owner: 'นุ่น /พี่ไก่', target: data.diffWasteTarget, actual: data.diffWasteActual, type: 'waste', lowerBetter: true, kg: data.diffWasteKg, val: data.diffWasteVal, excess: data.diffWasteActual > data.diffWasteTarget ? (data.diffWasteVal * (data.diffWasteActual - data.diffWasteTarget)/data.diffWasteActual) : 0 },
+        { name: '9. Waste FG+LTS', owner: 'พี่จิต / พี่อ้อ', target: data.wasteFGLTSTarget || 0.0002, actual: data.wasteFGLTSActual || 0, type: 'waste', lowerBetter: true, kg: data.wasteFGLTSKg || 0, val: data.wasteFGLTSVal || 0, excess: (data.wasteFGLTSActual > (data.wasteFGLTSTarget || 0.0002)) ? ((data.wasteFGLTSVal || 0) * (data.wasteFGLTSActual - (data.wasteFGLTSTarget || 0.0002))/data.wasteFGLTSActual) : 0 }
       ];
 
       let failCount = 0;
@@ -1422,6 +1492,7 @@
           <td class="py-3 px-3 text-right ${d.wastePlanActual > d.wastePlanTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wastePlanActual*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-right ${d.wasteRMActual > d.wasteRMTarget ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(d.wasteRMActual*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-right font-bold ${d.diffWasteActual > d.diffWasteTarget ? 'text-rose-600' : 'text-slate-600'}">${(d.diffWasteActual*100).toFixed(2)}%</td>
+          <td class="py-3 px-3 text-right ${d.wasteFGLTSActual > (d.wasteFGLTSTarget||0.0002) ? 'text-rose-600 font-bold' : 'text-slate-600'}">${((d.wasteFGLTSActual||0)*100).toFixed(2)}%</td>
           <td class="py-3 px-3 text-center space-x-1">
             <button onclick="editRecord(${i})" title="แก้ไข" class="p-1 hover:text-blue-600 text-slate-400"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
             <button onclick="deleteRecord(${i})" title="ลบ" class="p-1 hover:text-rose-600 text-slate-400"><i data-lucide="trash" class="w-4 h-4"></i></button>
@@ -1438,9 +1509,10 @@
       const planKg = parseFloat(document.getElementById('inputWastePlanKg').value) || 0;
       const rmKg = parseFloat(document.getElementById('inputWasteRMKg').value) || 0;
       const diffKg = parseFloat(document.getElementById('inputDiffWasteKg').value) || 0;
+      const fgLtsKg = parseFloat(document.getElementById('inputWasteFGLTSKg').value) || 0;
       const buyPrice = parseFloat(document.getElementById('inputBuyPrice').value) || 0;
 
-      const totalKg = Math.round(prodKg + planKg + rmKg + diffKg);
+      const totalKg = Math.round(prodKg + planKg + rmKg + diffKg + fgLtsKg);
       document.getElementById('inputTotalWasteKg').value = totalKg > 0 ? totalKg : '';
 
       if (totalKg > 0 && buyPrice > 0) {
@@ -1477,10 +1549,12 @@
         document.getElementById('inputWastePlan').value = 0.0330;
         document.getElementById('inputWasteRM').value = 0.0170;
         document.getElementById('inputDiffWaste').value = 0.0120;
+        document.getElementById('inputWasteFGLTS').value = 0.0001;
         document.getElementById('inputWasteProdKg').value = '';
         document.getElementById('inputWastePlanKg').value = '';
         document.getElementById('inputWasteRMKg').value = '';
         document.getElementById('inputDiffWasteKg').value = '';
+        document.getElementById('inputWasteFGLTSKg').value = '';
         document.getElementById('inputTotalWasteKg').value = '';
         document.getElementById('inputTotalWasteVal').value = '';
       }
@@ -1513,6 +1587,8 @@
       document.getElementById('inputWasteRMKg').value = d.wasteRMKg || Math.round((d.totalWasteKg || 0) * 0.11);
       document.getElementById('inputDiffWaste').value = d.diffWasteActual;
       document.getElementById('inputDiffWasteKg').value = d.diffWasteKg || Math.round((d.totalWasteKg || 0) * 0.49);
+      document.getElementById('inputWasteFGLTS').value = d.wasteFGLTSActual !== undefined ? d.wasteFGLTSActual : 0.0001;
+      document.getElementById('inputWasteFGLTSKg').value = d.wasteFGLTSKg !== undefined ? d.wasteFGLTSKg : 0;
       document.getElementById('inputTotalWasteVal').value = d.totalWasteVal;
       document.getElementById('inputTotalWasteKg').value = d.totalWasteKg;
 
@@ -1540,15 +1616,17 @@
       const planAct = parseFloat(document.getElementById('inputWastePlan').value);
       const rmAct = parseFloat(document.getElementById('inputWasteRM').value);
       const diffAct = parseFloat(document.getElementById('inputDiffWaste').value);
+      const fgLtsAct = parseFloat(document.getElementById('inputWasteFGLTS').value) || 0;
 
       const prodKg = parseFloat(document.getElementById('inputWasteProdKg').value) || 0;
       const planKg = parseFloat(document.getElementById('inputWastePlanKg').value) || 0;
       const rmKg = parseFloat(document.getElementById('inputWasteRMKg').value) || 0;
       const diffKg = parseFloat(document.getElementById('inputDiffWasteKg').value) || 0;
+      const fgLtsKg = parseFloat(document.getElementById('inputWasteFGLTSKg').value) || 0;
 
       let totalKg = parseInt(document.getElementById('inputTotalWasteKg').value);
       if (!totalKg || isNaN(totalKg)) {
-        totalKg = Math.round(prodKg + planKg + rmKg + diffKg);
+        totalKg = Math.round(prodKg + planKg + rmKg + diffKg + fgLtsKg);
       }
 
       let totalWaste = parseFloat(document.getElementById('inputTotalWasteVal').value);
@@ -1561,6 +1639,7 @@
       if (rmAct > 0.0158) excess += (rmKg > 0 ? rmKg * buyPrice : totalWaste * 0.15) * ((rmAct - 0.0158)/rmAct);
       if (prodAct > 0.05) excess += (prodKg > 0 ? prodKg * buyPrice : totalWaste * 0.20) * ((prodAct - 0.05)/prodAct);
       if (planAct > 0.035) excess += (planKg > 0 ? planKg * buyPrice : totalWaste * 0.18) * ((planAct - 0.035)/planAct);
+      if (fgLtsAct > 0.0002) excess += (fgLtsKg > 0 ? fgLtsKg * buyPrice : totalWaste * 0.01) * ((fgLtsAct - 0.0002)/fgLtsAct);
 
       const record = {
         week: parseInt(document.getElementById('inputWeek').value),
@@ -1591,6 +1670,10 @@
         wasteMktActual: 0.0001,
         wasteMktVal: 3000,
         wasteMktKg: 150,
+        wasteFGLTSTarget: 0.0002,
+        wasteFGLTSActual: fgLtsAct,
+        wasteFGLTSVal: fgLtsKg > 0 ? Math.round(fgLtsKg * buyPrice * 100)/100 : Math.round(totalWaste * 0.001 * 100)/100,
+        wasteFGLTSKg: fgLtsKg,
         diffWasteTarget: 0.0086,
         diffWasteActual: diffAct,
         diffWasteVal: diffKg > 0 ? Math.round(diffKg * buyPrice * 100)/100 : totalWaste * 0.48,
@@ -1598,7 +1681,7 @@
         totalWasteVal: totalWaste,
         totalExcessVal: Math.round(excess),
         totalWasteKg: totalKg,
-        excessCount: (prodAct>0.05?1:0) + (planAct>0.035?1:0) + (rmAct>0.0158?1:0) + (diffAct>0.0086?1:0)
+        excessCount: (prodAct>0.05?1:0) + (planAct>0.035?1:0) + (rmAct>0.0158?1:0) + (diffAct>0.0086?1:0) + (fgLtsAct>0.0002?1:0)
       };
 
       if (editIdx >= 0) {
@@ -1674,16 +1757,18 @@
       const avgRM = monthRows.reduce((s, r) => s + r.wasteRMActual, 0) / n;
       const avgMkt = monthRows.reduce((s, r) => s + r.wasteMktActual, 0) / n;
       const avgDiff = monthRows.reduce((s, r) => s + r.diffWasteActual, 0) / n;
+      const avgFGLTS = monthRows.reduce((s, r) => s + (r.wasteFGLTSActual || 0), 0) / n;
 
-      // รวม % Waste เฉลี่ย (Prod + Plan + RM + Mkt + Diff)
-      const avgTotalWasteRate = avgProd + avgPlan + avgRM + avgMkt + avgDiff;
-      const targetTotalWasteRate = 0.05 + 0.035 + 0.0158 + 0.0004 + 0.0086; // 0.1098 หรือ 10.98%
+      // รวม % Waste เฉลี่ย (Prod + Plan + RM + Mkt + Diff + FG+LTS)
+      const avgTotalWasteRate = avgProd + avgPlan + avgRM + avgMkt + avgDiff + avgFGLTS;
+      const targetTotalWasteRate = 0.05 + 0.035 + 0.0158 + 0.0004 + 0.0086 + 0.0002; // 0.1100 หรือ 11.00%
 
       const sumProdVal = monthRows.reduce((s, r) => s + (r.wasteProdVal || 0), 0);
       const sumPlanVal = monthRows.reduce((s, r) => s + (r.wastePlanVal || 0), 0);
       const sumRMVal = monthRows.reduce((s, r) => s + (r.wasteRMVal || 0), 0);
       const sumMktVal = monthRows.reduce((s, r) => s + (r.wasteMktVal || 0), 0);
       const sumDiffVal = monthRows.reduce((s, r) => s + (r.diffWasteVal || 0), 0);
+      const sumFGLTSVal = monthRows.reduce((s, r) => s + (r.wasteFGLTSVal || 0), 0);
 
       const sumTotalWaste = monthRows.reduce((s, r) => s + (r.totalWasteVal || 0), 0);
       const sumTotalExcess = monthRows.reduce((s, r) => s + (r.totalExcessVal || 0), 0);
@@ -1702,7 +1787,7 @@
       if (document.getElementById('monKpiWastePct')) {
         document.getElementById('monKpiWastePct').innerText = (avgTotalWasteRate * 100).toFixed(2) + '%';
         const isWasteOver = avgTotalWasteRate > targetTotalWasteRate;
-        document.getElementById('monKpiWasteStatus').innerHTML = `เป้า 10.98% (${isWasteOver ? '<span class="text-rose-600 font-semibold">สูงกว่าเป้า ✕</span>' : '<span class="text-emerald-600 font-semibold">ผ่านเป้า ✓</span>'})`;
+        document.getElementById('monKpiWasteStatus').innerHTML = `เป้า 11.00% (${isWasteOver ? '<span class="text-rose-600 font-semibold">สูงกว่าเป้า ✕</span>' : '<span class="text-emerald-600 font-semibold">ผ่านเป้า ✓</span>'})`;
       }
 
       document.getElementById('monKpiExcess').innerText = fmtMoney(sumTotalExcess);
@@ -1719,7 +1804,8 @@
         { name: '5. Waste / Planning', owner: 'พี่เก่ง / ปลา', target: 0.035, avg: avgPlan, isPct: true, lowerBetter: true, totalVal: sumPlanVal, excessVal: avgPlan > 0.035 ? sumPlanVal * ((avgPlan - 0.035)/avgPlan) : 0 },
         { name: '6. Waste / RM', owner: 'พี่ไก่ / แบม', target: 0.0158, avg: avgRM, isPct: true, lowerBetter: true, totalVal: sumRMVal, excessVal: avgRM > 0.0158 ? sumRMVal * ((avgRM - 0.0158)/avgRM) : 0 },
         { name: '7. Waste / Marketing', owner: 'ส้ม / เตย', target: 0.0004, avg: avgMkt, isPct: true, lowerBetter: true, totalVal: sumMktVal, excessVal: avgMkt > 0.0004 ? sumMktVal * ((avgMkt - 0.0004)/avgMkt) : 0 },
-        { name: '8. Diff Waste', owner: 'นุ่น / พี่ไก่', target: 0.0086, avg: avgDiff, isPct: true, lowerBetter: true, totalVal: sumDiffVal, excessVal: avgDiff > 0.0086 ? sumDiffVal * ((avgDiff - 0.0086)/avgDiff) : 0 }
+        { name: '8. Diff Waste', owner: 'นุ่น / พี่ไก่', target: 0.0086, avg: avgDiff, isPct: true, lowerBetter: true, totalVal: sumDiffVal, excessVal: avgDiff > 0.0086 ? sumDiffVal * ((avgDiff - 0.0086)/avgDiff) : 0 },
+        { name: '9. Waste FG+LTS', owner: 'พี่จิต / พี่อ้อ', target: 0.0002, avg: avgFGLTS, isPct: true, lowerBetter: true, totalVal: sumFGLTSVal, excessVal: avgFGLTS > 0.0002 ? sumFGLTSVal * ((avgFGLTS - 0.0002)/avgFGLTS) : 0 }
       ];
 
       let overCount = 0;
@@ -1784,7 +1870,8 @@
           const avgRM = rows.reduce((s, r) => s + r.wasteRMActual, 0) / n;
           const avgMkt = rows.reduce((s, r) => s + (r.wasteMktActual || 0), 0) / n;
           const avgDiff = rows.reduce((s, r) => s + r.diffWasteActual, 0) / n;
-          const avgTotalWaste = avgProd + avgPlan + avgRM + avgMkt + avgDiff;
+          const avgFGLTS = rows.reduce((s, r) => s + (r.wasteFGLTSActual || 0), 0) / n;
+          const avgTotalWaste = avgProd + avgPlan + avgRM + avgMkt + avgDiff + avgFGLTS;
           const mTotalWaste = rows.reduce((s, r) => s + r.totalWasteVal, 0);
           const mTotalExcess = rows.reduce((s, r) => s + r.totalExcessVal, 0);
 
@@ -1799,11 +1886,12 @@
               <td class="py-3 px-3 text-right font-medium ${avgBuy > 18.30 ? 'text-rose-600' : 'text-emerald-700'}">${avgBuy.toFixed(2)}</td>
               <td class="py-3 px-3 text-right font-medium ${avgSell < 25.70 ? 'text-amber-600' : 'text-slate-700'}">${avgSell.toFixed(2)}</td>
               <td class="py-3 px-3 text-right font-semibold ${avgPC > 0.7902 ? 'text-rose-600' : 'text-emerald-700'}">${(avgPC*100).toFixed(2)}%</td>
-              <td class="py-3 px-3 text-right font-bold ${avgTotalWaste > 0.1098 ? 'text-rose-600 bg-rose-50/50' : 'text-emerald-700'}">${(avgTotalWaste*100).toFixed(2)}%</td>
+              <td class="py-3 px-3 text-right font-bold ${avgTotalWaste > 0.1100 ? 'text-rose-600 bg-rose-50/50' : 'text-emerald-700'}">${(avgTotalWaste*100).toFixed(2)}%</td>
               <td class="py-3 px-3 text-right ${avgProd > 0.05 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(avgProd*100).toFixed(2)}%</td>
               <td class="py-3 px-3 text-right ${avgPlan > 0.035 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(avgPlan*100).toFixed(2)}%</td>
               <td class="py-3 px-3 text-right ${avgRM > 0.0158 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(avgRM*100).toFixed(2)}%</td>
               <td class="py-3 px-3 text-right ${avgDiff > 0.0086 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(avgDiff*100).toFixed(2)}%</td>
+              <td class="py-3 px-3 text-right ${avgFGLTS > 0.0002 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${(avgFGLTS*100).toFixed(2)}%</td>
               <td class="py-3 px-3 text-right font-bold text-rose-600">${fmtMoney(mTotalExcess)}</td>
               <td class="py-3 px-3 text-right font-bold text-slate-800">${fmtMoney(mTotalWaste)}</td>
             </tr>
@@ -1812,6 +1900,7 @@
           html += `
             <tr class="hover:bg-slate-50 text-slate-400">
               <td class="py-2.5 px-3 font-medium text-slate-500">${MONTH_SHORT[m]}</td>
+              <td class="py-2.5 px-3 text-right">-</td>
               <td class="py-2.5 px-3 text-right">-</td>
               <td class="py-2.5 px-3 text-right">-</td>
               <td class="py-2.5 px-3 text-right">-</td>
@@ -1829,7 +1918,7 @@
 
       html += `
         <tr class="bg-slate-100 font-bold border-t-2 border-slate-300">
-          <td colspan="9" class="py-3 px-3 text-right text-slate-800">รวมทั้งปี 2026:</td>
+          <td colspan="10" class="py-3 px-3 text-right text-slate-800">รวมทั้งปี 2026:</td>
           <td class="py-3 px-3 text-right text-rose-600">${fmtMoney(yearlyExcessSum)}</td>
           <td class="py-3 px-3 text-right text-slate-900">${fmtMoney(yearlyWasteSum)}</td>
         </tr>
