@@ -44,16 +44,25 @@
           <i data-lucide="line-chart" class="w-6 h-6 text-white"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-tight">Paper Cost & Department Waste Analytics</h1>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight">Paper Cost & Department Waste Analytics</h1>
+            <!-- Cloud Sync Status Badge -->
+            <span id="syncStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/20 text-amber-200 border border-amber-400/30">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> กำลังเชื่อมต่อ Cloud...
+            </span>
+          </div>
           <p class="text-xs text-blue-200">ระบบติดตามและวิเคราะห์ผลงานเทียบเป้าหมาย (Actual vs Target) ครบทั้ง 8 ส่วนงาน</p>
         </div>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
         <button onclick="openModal('addModal')" class="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-medium rounded-lg shadow-sm transition">
           <i data-lucide="plus-circle" class="w-4 h-4"></i> เพิ่มสัปดาห์ใหม่ (Week)
         </button>
         <button onclick="exportCSV()" class="flex items-center gap-1.5 px-3.5 py-2 bg-blue-800/80 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg border border-blue-600/50 transition">
           <i data-lucide="download" class="w-4 h-4"></i> ส่งออก CSV
+        </button>
+        <button onclick="syncLocalToCloud()" title="อัปโหลดข้อมูลที่เคยบันทึกในเครื่องนี้ขึ้น Cloud" class="flex items-center gap-1.5 px-3 py-2 bg-indigo-700/80 hover:bg-indigo-600 text-white text-xs font-medium rounded-lg border border-indigo-500/50 transition">
+          <i data-lucide="cloud-upload" class="w-4 h-4"></i> ดันข้อมูลเครื่องนี้ขึ้น Cloud
         </button>
         <button onclick="resetDefaultData()" title="คืนค่าข้อมูลเริ่มต้น" class="p-2 hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition">
           <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
@@ -72,7 +81,7 @@
           <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">มูลค่าของเสียรวม (สะสม)</p>
           <h3 id="kpiTotalWasteVal" class="text-2xl font-bold text-slate-900 mt-1">฿0.00</h3>
           <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
-            <span id="kpiWasteWeight" class="font-semibold text-slate-700">0 กก.</span> (รวม 5 สัปดาห์)
+            <span id="kpiWasteWeight" class="font-semibold text-slate-700">0 กก.</span> (<span id="kpiWeekCount">รวม 5 สัปดาห์</span>)
           </p>
         </div>
         <div class="p-3 bg-amber-50 rounded-xl text-amber-600">
@@ -119,20 +128,20 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="border-b border-slate-200 flex space-x-6 text-sm font-medium">
-      <button onclick="switchTab('deptCharts')" id="tabBtn-deptCharts" class="tab-active py-3 px-1 transition flex items-center gap-2">
+    <div class="border-b border-slate-200 flex space-x-6 text-sm font-medium overflow-x-auto">
+      <button onclick="switchTab('deptCharts')" id="tabBtn-deptCharts" class="tab-active py-3 px-1 transition flex items-center gap-2 whitespace-nowrap">
         <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i> กราฟแยกรายส่วนงานครบ 8 หน่วยงาน (Actual vs Target)
       </button>
-      <button onclick="switchTab('monthly')" id="tabBtn-monthly" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+      <button onclick="switchTab('monthly')" id="tabBtn-monthly" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2 whitespace-nowrap">
         <i data-lucide="calendar-range" class="w-4 h-4 text-emerald-600"></i> สรุปรายเดือน (Monthly Summary)
       </button>
-      <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+      <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2 whitespace-nowrap">
         <i data-lucide="layout-dashboard" class="w-4 h-4"></i> แดชบอร์ดภาพรวม (Overview)
       </button>
-      <button onclick="switchTab('weekly')" id="tabBtn-weekly" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+      <button onclick="switchTab('weekly')" id="tabBtn-weekly" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2 whitespace-nowrap">
         <i data-lucide="calendar" class="w-4 h-4"></i> ตารางเจาะลึกรายสัปดาห์ (Weekly Drill-down)
       </button>
-      <button onclick="switchTab('rawdata')" id="tabBtn-rawdata" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+      <button onclick="switchTab('rawdata')" id="tabBtn-rawdata" class="py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2 whitespace-nowrap">
         <i data-lucide="table" class="w-4 h-4"></i> ข้อมูลดิบ & บันทึกเพิ่ม (Data Records)
       </button>
     </div>
@@ -163,7 +172,7 @@
         </div>
       </div>
 
-      <!-- 8 Individual Department Cards Grid (4 columns on xl screens) -->
+      <!-- 8 Individual Department Cards Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
 
         <!-- 1. ราคาซื้อ / จัดซื้อ (ภัทร / พลอย) -->
@@ -393,7 +402,7 @@
             </h4>
             <p class="text-xs text-slate-400">ช่วยระบุว่าในแต่ละสัปดาห์ ส่วนงานใดคิดเป็นเม็ดเงินการสูญเสียมากที่สุด</p>
           </div>
-          <div class="text-xs font-semibold text-slate-600 flex gap-4">
+          <div class="text-xs font-semibold text-slate-600 flex gap-4 flex-wrap">
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-indigo-500"></span> Diff Waste</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500"></span> Production</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-500"></span> Planning</span>
@@ -412,7 +421,6 @@
     <!-- TAB: MONTHLY SUMMARY (สรุปรายเดือนด้วยค่าเฉลี่ย) -->
     <!-- ========================================== -->
     <div id="tabContent-monthly" class="space-y-6 hidden">
-      <!-- Selector & Month Overview Card -->
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <div class="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl">
@@ -425,9 +433,7 @@
         </div>
         <div class="flex items-center gap-3">
           <label for="monthlyMonthSelect" class="text-xs font-bold text-slate-700">เลือกเดือน:</label>
-          <select id="monthlyMonthSelect" onchange="renderMonthlySummary()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-            <!-- options inserted by JS -->
-          </select>
+          <select id="monthlyMonthSelect" onchange="renderMonthlySummary()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"></select>
           <span id="monthlyWeekCountBadge" class="text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 font-semibold rounded-lg border border-emerald-200">
             5 สัปดาห์
           </span>
@@ -487,14 +493,12 @@
                 <th class="py-3 px-4 text-right text-rose-600 font-bold">มูลค่าสูญเสียเกินเป้ารวม (บาท)</th>
               </tr>
             </thead>
-            <tbody id="monthlyTableBody" class="divide-y divide-slate-100">
-              <!-- populated by JS -->
-            </tbody>
+            <tbody id="monthlyTableBody" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- 12-Month Historical Matrix (ตารางเปรียบเทียบเฉลี่ย 12 เดือน) -->
+      <!-- 12-Month Historical Matrix -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-100">
           <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
@@ -514,20 +518,16 @@
                 <th class="py-3 px-3 text-right">Production</th>
                 <th class="py-3 px-3 text-right">Planning</th>
                 <th class="py-3 px-3 text-right">RM</th>
-                <th class="py-3 px-3 text-right">Marketing</th>
                 <th class="py-3 px-3 text-right">Diff Waste</th>
                 <th class="py-3 px-3 text-right">FG+LTS</th>
                 <th class="py-3 px-3 text-right font-bold text-rose-600">ส่วนเกินเป้ารวม</th>
                 <th class="py-3 px-3 text-right font-bold">มูลค่าของเสียรวม</th>
               </tr>
             </thead>
-            <tbody id="yearMatrixTableBody" class="divide-y divide-slate-100">
-              <!-- populated by JS -->
-            </tbody>
+            <tbody id="yearMatrixTableBody" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
-
     </div>
 
     <!-- ========================================== -->
@@ -550,7 +550,7 @@
             <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
               <i data-lucide="bar-chart-3" class="w-4 h-4 text-rose-600"></i> มูลค่าของเสียรวม vs ส่วนเกินเป้าหมาย (Loss)
             </h3>
-            <span class="text-xs px-2.5 py-1 rounded bg-rose-50 text-rose-700 font-semibold">Loss สะสม ฿5.18M</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-rose-50 text-rose-700 font-semibold">Loss สะสม</span>
           </div>
           <div class="h-64"><canvas id="wasteValueChart"></canvas></div>
         </div>
@@ -561,7 +561,7 @@
           <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2 mb-1">
             <i data-lucide="pie-chart" class="w-4 h-4 text-amber-500"></i> สัดส่วนมูลค่าของเสียแยกตามแผนก
           </h3>
-          <p class="text-xs text-slate-400 mb-3">สะสมทั้ง 5 สัปดาห์ (Week 40-44)</p>
+          <p class="text-xs text-slate-400 mb-3">สะสมทุกสัปดาห์</p>
           <div class="h-52 relative flex items-center justify-center">
             <canvas id="wastePieChart"></canvas>
           </div>
@@ -648,7 +648,7 @@
         <div class="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <i data-lucide="database" class="w-4 h-4 text-indigo-600"></i> ตารางบันทึกข้อมูลรายสัปดาห์ (ฝ่ายโรงงาน)
+              <i data-lucide="database" class="w-4 h-4 text-indigo-600"></i> ตารางบันทึกข้อมูลรายสัปดาห์ (ซิงก์อัตโนมัติทุกเครื่อง)
             </h3>
             <p class="text-xs text-slate-400">แสดงข้อมูลทุกสัปดาห์ สามารถกดแก้ไขหรือลบรายการได้</p>
           </div>
@@ -717,7 +717,6 @@
           <span class="text-[11px] font-normal text-slate-400">กรอกราคาจริงและน้ำหนักวัตถุดิบ/ยอดขาย</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <!-- 1. ราคาซื้อจริง -->
           <div class="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200/80 space-y-1.5">
             <span class="font-bold text-emerald-800 block text-[11px]">ราคาซื้อจริง (Target: 18.30 ฿)</span>
             <div>
@@ -730,7 +729,6 @@
             </div>
           </div>
 
-          <!-- 2. ราคาขายจริง -->
           <div class="bg-blue-50/50 p-2.5 rounded-xl border border-blue-200/80 space-y-1.5">
             <span class="font-bold text-blue-800 block text-[11px]">ราคาขายจริง (Target: 25.70 ฿)</span>
             <div>
@@ -743,7 +741,6 @@
             </div>
           </div>
 
-          <!-- 3. % Paper Cost -->
           <div class="bg-purple-50/50 p-2.5 rounded-xl border border-purple-200/80 space-y-1.5 sm:col-span-2 lg:col-span-1 flex flex-col justify-between">
             <div>
               <span class="font-bold text-purple-800 block text-[11px]">% Paper Cost (Target: 79.02%)</span>
@@ -762,7 +759,6 @@
           <span class="text-[11px] font-normal text-slate-400">ใส่อัตราส่วนและน้ำหนักของแต่ละหน่วยงาน</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <!-- 1. Production -->
           <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
             <span class="font-bold text-slate-700 block text-[11px]">1. Production (เป้า 0.05)</span>
             <div>
@@ -775,7 +771,6 @@
             </div>
           </div>
 
-          <!-- 2. Planning -->
           <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
             <span class="font-bold text-slate-700 block text-[11px]">2. Planning (เป้า 0.035)</span>
             <div>
@@ -788,7 +783,6 @@
             </div>
           </div>
 
-          <!-- 3. RM -->
           <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
             <span class="font-bold text-slate-700 block text-[11px]">3. RM วัตถุดิบ (เป้า 0.0158)</span>
             <div>
@@ -801,7 +795,6 @@
             </div>
           </div>
 
-          <!-- 4. Diff Waste -->
           <div class="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
             <span class="font-bold text-slate-700 block text-[11px]">4. Diff Waste (เป้า 0.0086)</span>
             <div>
@@ -814,7 +807,6 @@
             </div>
           </div>
 
-          <!-- 5. Waste / Marketing -->
           <div class="bg-slate-50/70 p-2.5 rounded-xl border border-emerald-200/80 space-y-1.5">
             <span class="font-bold text-emerald-800 block text-[11px]">5. Waste / Marketing (เป้า 0.0004)</span>
             <div>
@@ -827,7 +819,6 @@
             </div>
           </div>
 
-          <!-- 6. Waste FG+LTS -->
           <div class="bg-slate-50/70 p-2.5 rounded-xl border border-teal-200/80 space-y-1.5">
             <span class="font-bold text-teal-800 block text-[11px]">6. Waste FG+LTS (เป้า 0.0002)</span>
             <div>
@@ -860,18 +851,31 @@
 
         <div class="flex justify-end gap-2 pt-4 border-t">
           <button type="button" onclick="closeModal('addModal')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg">ยกเลิก</button>
-          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg shadow-sm">บันทึกข้อมูล</button>
+          <button type="submit" id="saveSubmitBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg shadow-sm">บันทึกข้อมูลขึ้น Cloud</button>
         </div>
       </form>
     </div>
   </div>
 
   <footer class="max-w-7xl mx-auto px-4 py-6 text-center text-xs text-slate-400 border-t border-slate-200 mt-10">
-    ระบบบริหารจัดการต้นทุนกระดาษและของเสียโรงงาน (Factory Cost & Waste Tracker) • พัฒนาเพื่อการวิเคราะห์และตัดสินใจทางวิศวกรรมการผลิต
+    ระบบบริหารจัดการต้นทุนกระดาษและของเสียโรงงาน (Factory Cost & Waste Tracker) • เชื่อมต่อฐานข้อมูลกลาง Real-time Cloud Sync
   </footer>
 
-  <!-- Core JavaScript Logic -->
-  <script>
+  <!-- Core JavaScript + Firebase Firestore Real-time Sync -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVYAFpkp7OSq2NmY8E89MidbZXp_UA8lM",
+      authDomain: "knomtan-12297.firebaseapp.com",
+      projectId: "knomtan-12297",
+      storageBucket: "knomtan-12297.firebasestorage.app",
+      messagingSenderId: "251931906839",
+      appId: "1:251931906839:web:74168f4a43f30398069d52",
+      measurementId: "G-1F4DX4JWM4"
+    };
+
     const DEFAULT_DATA = [
       {
         week: 40, date: "01-04", month: 10, year: 2026,
@@ -956,36 +960,112 @@
     ];
 
     let dataset = JSON.parse(localStorage.getItem('paper_cost_data')) || DEFAULT_DATA;
-    // Auto-migrate cached localStorage if missing wasteFGLTS
-    if (dataset.length > 0 && dataset[0].wasteFGLTSActual === undefined) {
-      dataset = JSON.parse(JSON.stringify(DEFAULT_DATA));
-      localStorage.setItem('paper_cost_data', JSON.stringify(dataset));
-    }
     let charts = {};
+    let db = null;
+    let docRef = null;
+    let isFirebaseReady = false;
 
-    function saveDataset() {
-      localStorage.setItem('paper_cost_data', JSON.stringify(dataset));
-    }
-
-    function resetDefaultData() {
-      if (confirm('คุณต้องการคืนค่าเป็นข้อมูลตัวอย่างเริ่มต้นใช่หรือไม่?')) {
-        dataset = JSON.parse(JSON.stringify(DEFAULT_DATA));
-        saveDataset();
-        initApp();
+    function setSyncStatus(status, text) {
+      const badge = document.getElementById('syncStatusBadge');
+      if (!badge) return;
+      if (status === 'connected') {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/20 text-emerald-200 border border-emerald-400/30';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> ${text}`;
+      } else if (status === 'saving') {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-500/20 text-blue-200 border border-blue-400/30';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span> ${text}`;
+      } else {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/20 text-rose-200 border border-rose-400/30';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400"></span> ${text}`;
       }
     }
 
+    // เชื่อมต่อ Firebase Firestore
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      docRef = doc(db, "paper_cost_tracker", "weekly_records");
+      isFirebaseReady = true;
+
+      // ฟังการเปลี่ยนแปลงแบบ Real-time จาก Cloud
+      onSnapshot(docRef, async (snapshot) => {
+        if (snapshot.exists() && Array.isArray(snapshot.data().records)) {
+          dataset = snapshot.data().records;
+          localStorage.setItem('paper_cost_data', JSON.stringify(dataset));
+          setSyncStatus('connected', 'Cloud Sync พร้อมใช้งาน');
+          initApp();
+        } else {
+          // ถ้าใน Cloud ยังไม่มีข้อมูลเลย ให้ส่งข้อมูลตั้งต้นขึ้นไปสร้างครั้งแรก
+          setSyncStatus('saving', 'กำลังสร้างฐานข้อมูลครั้งแรก...');
+          await setDoc(docRef, { records: dataset, updatedAt: new Date().toISOString() });
+          setSyncStatus('connected', 'Cloud Sync พร้อมใช้งาน');
+        }
+      }, (error) => {
+        console.error("Firestore error:", error);
+        setSyncStatus('error', 'เชื่อมต่อ Cloud ไม่สำเร็จ (เช็ค Rules)');
+      });
+    } catch (err) {
+      console.error("Firebase init error:", err);
+      setSyncStatus('error', 'ตั้งค่า Firebase ไม่ถูกต้อง');
+    }
+
+    // บันทึกข้อมูลทั้งขึ้น Cloud และเก็บสำรองในเครื่อง
+    async function saveDataset() {
+      localStorage.setItem('paper_cost_data', JSON.stringify(dataset));
+      if (isFirebaseReady && docRef) {
+        try {
+          setSyncStatus('saving', 'กำลังบันทึกขึ้น Cloud...');
+          await setDoc(docRef, {
+            records: dataset,
+            updatedAt: new Date().toISOString()
+          });
+          setSyncStatus('connected', 'ซิงก์ข้อมูลล่าสุดแล้ว ✓');
+        } catch (err) {
+          console.error("Save error:", err);
+          setSyncStatus('error', 'บันทึกขึ้น Cloud ไม่สำเร็จ');
+          alert('ไม่สามารถบันทึกขึ้น Cloud ได้ กรุณาตรวจสอบอินเทอร์เน็ตหรือสิทธิ์ Firestore Rules');
+        }
+      }
+    }
+
+    // ปุ่มดันข้อมูลจากเครื่องเดิมขึ้น Cloud กรณีมีข้อมูลค้างในเครื่อง
+    window.syncLocalToCloud = async function() {
+      if (!isFirebaseReady) {
+        alert('ไม่สามารถเชื่อมต่อ Firebase ได้');
+        return;
+      }
+      const localData = JSON.parse(localStorage.getItem('paper_cost_data'));
+      if (!localData || localData.length === 0) {
+        alert('ไม่พบข้อมูลในเครื่องนี้');
+        return;
+      }
+      if (confirm(`พบข้อมูลในเครื่องนี้จำนวน ${localData.length} สัปดาห์ ต้องการอัปโหลดขึ้นฐานข้อมูลกลาง (ทับข้อมูลบน Cloud) ใช่หรือไม่?`)) {
+        dataset = localData;
+        await saveDataset();
+        initApp();
+        alert('อัปโหลดข้อมูลขึ้น Cloud เรียบร้อยแล้ว! เครื่องอื่นจะเห็นข้อมูลตรงกันทันที');
+      }
+    };
+
+    window.resetDefaultData = async function() {
+      if (confirm('คุณต้องการคืนค่าเป็นข้อมูลตัวอย่างเริ่มต้นบน Cloud ใช่หรือไม่? (จะมีผลกับทุกเครื่อง)')) {
+        dataset = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        await saveDataset();
+        initApp();
+      }
+    };
+
     // SWITCH TABS
-    function switchTab(tabId) {
+    window.switchTab = function(tabId) {
       ['deptCharts', 'monthly', 'dashboard', 'weekly', 'rawdata'].forEach(t => {
         const content = document.getElementById(`tabContent-${t}`);
         const btn = document.getElementById(`tabBtn-${t}`);
         if (t === tabId) {
           content.classList.remove('hidden');
-          btn.className = 'tab-active py-3 px-1 transition flex items-center gap-2';
+          btn.className = 'tab-active py-3 px-1 transition flex items-center gap-2 whitespace-nowrap';
         } else {
           content.classList.add('hidden');
-          btn.className = 'py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2';
+          btn.className = 'py-3 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2 whitespace-nowrap';
         }
       });
 
@@ -1000,7 +1080,7 @@
       } else if (tabId === 'weekly') {
         renderWeeklyDetail();
       }
-    }
+    };
 
     // NUMBER FORMATTERS
     const fmtMoney = (n) => '฿' + Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1016,6 +1096,9 @@
 
       document.getElementById('kpiTotalWasteVal').innerText = fmtMoney(totalWaste);
       document.getElementById('kpiWasteWeight').innerText = fmtKg(totalKg);
+      if (document.getElementById('kpiWeekCount')) {
+        document.getElementById('kpiWeekCount').innerText = `รวม ${dataset.length} สัปดาห์`;
+      }
       document.getElementById('kpiTotalExcess').innerText = fmtMoney(totalExcess);
       
       const excessRate = totalWaste ? (totalExcess / totalWaste * 100).toFixed(1) : 0;
@@ -1030,14 +1113,11 @@
       `;
     }
 
-    // Custom inline plugin วาดตัวเลขอยู่ "เหนือหัวแท่งกราฟ" ทุกแท่ง
-    // ถ้าได้ตามเป้าหมาย -> ตัวเลขสีดำ (#0f172a)
-    // ถ้าเกินเป้าหมาย (หรือไม่ผ่านเกณฑ์) -> ตัวเลขสีแดงสด (#dc2626) หนาชัดเจน
     const barLabelsPlugin = {
       id: 'barLabelsPlugin',
       afterDatasetsDraw(chart, args, options) {
         const { ctx, chartArea } = chart;
-        const meta = chart.getDatasetMeta(0); // dataset 0 คือ Actual bar
+        const meta = chart.getDatasetMeta(0);
         if (!meta || meta.hidden) return;
 
         const isPct = options && options.isPercentage;
@@ -1054,19 +1134,14 @@
           if (val === null || val === undefined) return;
 
           const text = val + (isPct ? '%' : ' ฿');
-          
-          // เช็คว่าผ่านเป้าหมายหรือเกินเป้าหมาย
           const numVal = Number(val);
           const isFail = lowerBetter ? (numVal > targetVal) : (numVal < targetVal);
 
-          // วางตัวเลขเหนือหัวแท่งกราฟ
           let textY = bar.y - 3;
           if (chartArea && textY < chartArea.top + 10) {
             textY = chartArea.top + 10;
           }
 
-          // ถ้าได้เป้าหมาย -> สีดำเข้มคมชัด (#0f172a)
-          // ถ้าเกินเป้าหมาย -> สีแดง (#dc2626)
           ctx.fillStyle = isFail ? '#dc2626' : '#0f172a';
           ctx.fillText(text, bar.x, textY);
         });
@@ -1074,15 +1149,13 @@
       }
     };
 
-    // ==========================================
-    // RENDER ALL 8 DEPARTMENT CHARTS (TAB 1)
-    // ==========================================
     function renderDeptCharts() {
       const labels = dataset.map(d => `W${d.week}`);
 
-      // Generic helper to draw standard Actual vs Target chart
       const drawDeptChart = (canvasId, chartKey, actualData, targetVal, defaultColor, isPercentage, lowerBetter) => {
-        const ctx = document.getElementById(canvasId).getContext('2d');
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
         if (charts[chartKey]) charts[chartKey].destroy();
 
         const formattedActual = actualData.map(v => isPercentage ? Number((v * 100).toFixed(2)) : Number(v.toFixed(2)));
@@ -1119,11 +1192,7 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            layout: {
-              padding: {
-                top: 25
-              }
-            },
+            layout: { padding: { top: 25 } },
             plugins: {
               legend: { display: false },
               barLabelsPlugin: {
@@ -1152,32 +1221,16 @@
         });
       };
 
-      // 1. ราคาซื้อ / จัดซื้อ (ภัทร / พลอย) -> ยิ่งต่ำยิ่งดี, เป้า 18.30
       drawDeptChart('deptChartBuyPrice', 'deptBuy', dataset.map(d => d.buyActual), 18.30, '#10b981', false, true);
-
-      // 2. ราคาขาย / ตลาด (พี่หญิง / เนย) -> ยิ่งสูงยิ่งดี, เป้า 25.70
       drawDeptChart('deptChartSellPrice', 'deptSell', dataset.map(d => d.sellActual), 25.70, '#0284c7', false, false);
-
-      // 3. % Paper Cost (ทุกแผนก) -> ยิ่งต่ำยิ่งดี, เป้า 79.02%
       drawDeptChart('deptChartPaperCost', 'deptPC', dataset.map(d => d.paperCostActual), 0.7902, '#3b82f6', true, true);
-
-      // 4. Waste / Production (ดล / ปัญญา / อาทร์) -> เป้า 5.00%
       drawDeptChart('deptChartProd', 'deptProd', dataset.map(d => d.wasteProdActual), 0.05, '#f59e0b', true, true);
-
-      // 5. Waste / Planning (พี่เก่ง / ปลา) -> เป้า 3.50%
       drawDeptChart('deptChartPlan', 'deptPlan', dataset.map(d => d.wastePlanActual), 0.035, '#3b82f6', true, true);
-
-      // 6. Waste / RM (พี่ไก่ / แบม) -> เป้า 1.58%
       drawDeptChart('deptChartRM', 'deptRM', dataset.map(d => d.wasteRMActual), 0.0158, '#ec4899', true, true);
-
-      // 7. Waste / Marketing (ส้ม / เตย) -> เป้า 0.04%
-      drawDeptChart('deptChartMkt', 'deptMkt', dataset.map(d => d.wasteMktActual), 0.0004, '#10b981', true, true);
-
-      // 8. Diff Waste (นุ่น / พี่ไก่) -> เป้า 0.86%
+      drawDeptChart('deptChartMkt', 'deptMkt', dataset.map(d => d.wasteMktActual || 0), 0.0004, '#10b981', true, true);
       drawDeptChart('deptChartDiff', 'deptDiff', dataset.map(d => d.diffWasteActual), 0.0086, '#6366f1', true, true);
-
-      // 9. Waste FG+LTS (พี่จิต / พี่อ้อ) -> เป้า 0.02%
       drawDeptChart('deptChartFGLTS', 'deptFGLTS', dataset.map(d => d.wasteFGLTSActual || 0), 0.0002, '#0d9488', true, true);
+
       const avgFGLTS = dataset.reduce((s, d) => s + (d.wasteFGLTSActual || 0), 0) / (dataset.length || 1);
       const deptFGLTSAvgEl = document.getElementById('deptFGLTSAvg');
       if (deptFGLTSAvgEl) deptFGLTSAvgEl.innerText = (avgFGLTS * 100).toFixed(3) + '%';
@@ -1192,7 +1245,6 @@
         }
       }
 
-      // Stacked Value Chart
       const ctxStack = document.getElementById('deptChartStacked').getContext('2d');
       if (charts.deptStacked) charts.deptStacked.destroy();
       charts.deptStacked = new Chart(ctxStack, {
@@ -1226,11 +1278,9 @@
       });
     }
 
-    // INIT DASHBOARD CHARTS
     function initOverviewCharts() {
       const labels = dataset.map(d => `W${d.week}`);
 
-      // Paper Cost Chart
       const ctx1 = document.getElementById('paperCostChart').getContext('2d');
       if (charts.paperCost) charts.paperCost.destroy();
       charts.paperCost = new Chart(ctx1, {
@@ -1269,7 +1319,6 @@
         }
       });
 
-      // Waste Value vs Excess
       const ctx2 = document.getElementById('wasteValueChart').getContext('2d');
       if (charts.wasteVal) charts.wasteVal.destroy();
       charts.wasteVal = new Chart(ctx2, {
@@ -1300,14 +1349,13 @@
         }
       });
 
-      // Waste Distribution Pie
       const prodSum = dataset.reduce((s, d) => s + (d.wasteProdVal || 0), 0);
       const planSum = dataset.reduce((s, d) => s + (d.wastePlanVal || 0), 0);
       const rmSum = dataset.reduce((s, d) => s + (d.wasteRMVal || 0), 0);
       const diffSum = dataset.reduce((s, d) => s + (d.diffWasteVal || 0), 0);
       const mktSum = dataset.reduce((s, d) => s + (d.wasteMktVal || 0), 0);
       const fgltsSum = dataset.reduce((s, d) => s + (d.wasteFGLTSVal || 0), 0);
-      const totalDeptWaste = prodSum + planSum + rmSum + diffSum + mktSum + fgltsSum;
+      const totalDeptWaste = prodSum + planSum + rmSum + diffSum + mktSum + fgltsSum || 1;
 
       const ctx3 = document.getElementById('wastePieChart').getContext('2d');
       if (charts.wastePie) charts.wastePie.destroy();
@@ -1330,7 +1378,6 @@
         }
       });
 
-      // Update Legend
       const pieLegendDiv = document.getElementById('pieLegend');
       const pieCategories = [
         { label: 'Diff Waste (นุ่น/พี่ไก่)', val: diffSum, color: 'bg-indigo-500' },
@@ -1352,7 +1399,6 @@
         </div>
       `).join('');
 
-      // Price Buy vs Sell
       const ctx5 = document.getElementById('priceChart').getContext('2d');
       if (charts.price) charts.price.destroy();
       charts.price = new Chart(ctx5, {
@@ -1412,15 +1458,15 @@
       });
     }
 
-    // RENDER WEEKLY DRILLDOWN
     function populateWeekSelector() {
       const select = document.getElementById('weekSelect');
+      const currentVal = select.value;
       select.innerHTML = dataset.map((d, idx) => `
-        <option value="${idx}">Week ${d.week} (${d.date}/${d.month}/${d.year})</option>
+        <option value="${idx}" ${String(idx) === currentVal ? 'selected' : ''}>Week ${d.week} (${d.date}/${d.month}/${d.year})</option>
       `).join('');
     }
 
-    function renderWeeklyDetail() {
+    window.renderWeeklyDetail = function() {
       const select = document.getElementById('weekSelect');
       const idx = parseInt(select.value) || 0;
       const data = dataset[idx];
@@ -1475,7 +1521,6 @@
       document.getElementById('weekTotalVal').innerText = fmtMoney(data.totalWasteVal);
       document.getElementById('weekTotalExcess').innerText = fmtMoney(data.totalExcessVal);
 
-      // Diagnosis remarks
       const diagList = document.getElementById('weeklyDiagnosisList');
       let remarks = [];
       if (data.diffWasteActual > data.diffWasteTarget) {
@@ -1491,9 +1536,8 @@
         remarks.push(`• สัปดาห์นี้ควบคุมตัวชี้วัดได้ตามเกณฑ์มาตรฐาน ยอดเยี่ยม!`);
       }
       diagList.innerHTML = remarks.map(r => `<div>${r}</div>`).join('');
-    }
+    };
 
-    // RENDER RAW DATA TABLE
     function renderRawTable() {
       const tbody = document.getElementById('rawDataTableBody');
       tbody.innerHTML = dataset.map((d, i) => `
@@ -1518,9 +1562,7 @@
       lucide.createIcons();
     }
 
-    // MODAL ACTIONS
-    // ฟังก์ชันคำนวณน้ำหนักของเสียรวม และมูลค่าของเสียรวม อัตโนมัติ
-    function calculateTotals() {
+    window.calculateTotals = function() {
       const prodKg = parseFloat(document.getElementById('inputWasteProdKg').value) || 0;
       const planKg = parseFloat(document.getElementById('inputWastePlanKg').value) || 0;
       const rmKg = parseFloat(document.getElementById('inputWasteRMKg').value) || 0;
@@ -1536,18 +1578,17 @@
         const totalVal = Math.round((totalKg * buyPrice) * 100) / 100;
         document.getElementById('inputTotalWasteVal').value = totalVal;
       }
-    }
+    };
 
-    // กรณีผู้ใช้กรอกหรือแก้น้ำหนักรวมโดยตรง ให้ช่วยคำนวณมูลค่ารวมด้วยราคาซื้อ
-    function calculateFromTotal() {
+    window.calculateFromTotal = function() {
       const totalKg = parseFloat(document.getElementById('inputTotalWasteKg').value) || 0;
       const buyPrice = parseFloat(document.getElementById('inputBuyPrice').value) || 0;
       if (totalKg > 0 && buyPrice > 0) {
         document.getElementById('inputTotalWasteVal').value = Math.round((totalKg * buyPrice) * 100) / 100;
       }
-    }
+    };
 
-    function openModal(id) {
+    window.openModal = function(id) {
       document.getElementById('editIndex').value = "-1";
       document.getElementById('modalTitle').innerHTML = `<i data-lucide="calendar-plus" class="w-5 h-5 text-blue-600"></i> บันทึกข้อมูลประจำสัปดาห์ใหม่`;
       document.getElementById('weekForm').reset();
@@ -1558,9 +1599,7 @@
         document.getElementById('inputMonth').value = last.month;
         document.getElementById('inputYear').value = last.year;
         document.getElementById('inputBuyPrice').value = 18.20;
-        document.getElementById('inputBuyKg').value = '';
         document.getElementById('inputSellPrice').value = 25.50;
-        document.getElementById('inputSellKg').value = '';
         document.getElementById('inputPaperCost').value = 0.7900;
         document.getElementById('inputWasteProd').value = 0.0470;
         document.getElementById('inputWastePlan').value = 0.0330;
@@ -1568,24 +1607,16 @@
         document.getElementById('inputDiffWaste').value = 0.0120;
         document.getElementById('inputWasteMkt').value = 0.0001;
         document.getElementById('inputWasteFGLTS').value = 0.0001;
-        document.getElementById('inputWasteProdKg').value = '';
-        document.getElementById('inputWastePlanKg').value = '';
-        document.getElementById('inputWasteRMKg').value = '';
-        document.getElementById('inputDiffWasteKg').value = '';
-        document.getElementById('inputWasteMktKg').value = '';
-        document.getElementById('inputWasteFGLTSKg').value = '';
-        document.getElementById('inputTotalWasteKg').value = '';
-        document.getElementById('inputTotalWasteVal').value = '';
       }
       document.getElementById(id).classList.remove('hidden');
       lucide.createIcons();
-    }
+    };
 
-    function closeModal(id) {
+    window.closeModal = function(id) {
       document.getElementById(id).classList.add('hidden');
-    }
+    };
 
-    function editRecord(index) {
+    window.editRecord = function(index) {
       const d = dataset[index];
       document.getElementById('editIndex').value = index;
       document.getElementById('modalTitle').innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-blue-600"></i> แก้ไขข้อมูล Week ${d.week}`;
@@ -1615,113 +1646,121 @@
 
       document.getElementById('addModal').classList.remove('hidden');
       lucide.createIcons();
-    }
+    };
 
-    function deleteRecord(index) {
-      if (confirm(`คุณต้องการลบข้อมูล Week ${dataset[index].week} ใช่หรือไม่?`)) {
+    window.deleteRecord = async function(index) {
+      if (confirm(`คุณต้องการลบข้อมูล Week ${dataset[index].week} ใช่หรือไม่? (จะลบออกจากทุกเครื่อง)`)) {
         dataset.splice(index, 1);
-        saveDataset();
+        await saveDataset();
         initApp();
       }
-    }
+    };
 
-    function handleFormSubmit(e) {
+    window.handleFormSubmit = async function(e) {
       e.preventDefault();
-      const editIdx = parseInt(document.getElementById('editIndex').value);
-      
-      const buyPrice = parseFloat(document.getElementById('inputBuyPrice').value);
-      const buyKg = parseFloat(document.getElementById('inputBuyKg').value) || 0;
-      const sellPrice = parseFloat(document.getElementById('inputSellPrice').value);
-      const sellKg = parseFloat(document.getElementById('inputSellKg').value) || 0;
-      const prodAct = parseFloat(document.getElementById('inputWasteProd').value);
-      const planAct = parseFloat(document.getElementById('inputWastePlan').value);
-      const rmAct = parseFloat(document.getElementById('inputWasteRM').value);
-      const diffAct = parseFloat(document.getElementById('inputDiffWaste').value);
-      const mktAct = parseFloat(document.getElementById('inputWasteMkt').value) || 0;
-      const fgLtsAct = parseFloat(document.getElementById('inputWasteFGLTS').value) || 0;
+      const btn = document.getElementById('saveSubmitBtn');
+      btn.disabled = true;
+      btn.innerText = 'กำลังบันทึก...';
 
-      const prodKg = parseFloat(document.getElementById('inputWasteProdKg').value) || 0;
-      const planKg = parseFloat(document.getElementById('inputWastePlanKg').value) || 0;
-      const rmKg = parseFloat(document.getElementById('inputWasteRMKg').value) || 0;
-      const diffKg = parseFloat(document.getElementById('inputDiffWasteKg').value) || 0;
-      const mktKg = parseFloat(document.getElementById('inputWasteMktKg').value) || 0;
-      const fgLtsKg = parseFloat(document.getElementById('inputWasteFGLTSKg').value) || 0;
+      try {
+        const editIdx = parseInt(document.getElementById('editIndex').value);
+        
+        const buyPrice = parseFloat(document.getElementById('inputBuyPrice').value);
+        const buyKg = parseFloat(document.getElementById('inputBuyKg').value) || 0;
+        const sellPrice = parseFloat(document.getElementById('inputSellPrice').value);
+        const sellKg = parseFloat(document.getElementById('inputSellKg').value) || 0;
+        const prodAct = parseFloat(document.getElementById('inputWasteProd').value);
+        const planAct = parseFloat(document.getElementById('inputWastePlan').value);
+        const rmAct = parseFloat(document.getElementById('inputWasteRM').value);
+        const diffAct = parseFloat(document.getElementById('inputDiffWaste').value);
+        const mktAct = parseFloat(document.getElementById('inputWasteMkt').value) || 0;
+        const fgLtsAct = parseFloat(document.getElementById('inputWasteFGLTS').value) || 0;
 
-      let totalKg = parseInt(document.getElementById('inputTotalWasteKg').value);
-      if (!totalKg || isNaN(totalKg)) {
-        totalKg = Math.round(prodKg + planKg + rmKg + diffKg + mktKg + fgLtsKg);
+        const prodKg = parseFloat(document.getElementById('inputWasteProdKg').value) || 0;
+        const planKg = parseFloat(document.getElementById('inputWastePlanKg').value) || 0;
+        const rmKg = parseFloat(document.getElementById('inputWasteRMKg').value) || 0;
+        const diffKg = parseFloat(document.getElementById('inputDiffWasteKg').value) || 0;
+        const mktKg = parseFloat(document.getElementById('inputWasteMktKg').value) || 0;
+        const fgLtsKg = parseFloat(document.getElementById('inputWasteFGLTSKg').value) || 0;
+
+        let totalKg = parseInt(document.getElementById('inputTotalWasteKg').value);
+        if (!totalKg || isNaN(totalKg)) {
+          totalKg = Math.round(prodKg + planKg + rmKg + diffKg + mktKg + fgLtsKg);
+        }
+
+        let totalWaste = parseFloat(document.getElementById('inputTotalWasteVal').value);
+        if (!totalWaste || isNaN(totalWaste)) {
+          totalWaste = Math.round((totalKg * buyPrice) * 100) / 100;
+        }
+
+        let excess = 0;
+        if (diffAct > 0.0086) excess += (diffKg > 0 ? diffKg * buyPrice : totalWaste * 0.45) * ((diffAct - 0.0086)/diffAct);
+        if (rmAct > 0.0158) excess += (rmKg > 0 ? rmKg * buyPrice : totalWaste * 0.15) * ((rmAct - 0.0158)/rmAct);
+        if (prodAct > 0.05) excess += (prodKg > 0 ? prodKg * buyPrice : totalWaste * 0.20) * ((prodAct - 0.05)/prodAct);
+        if (planAct > 0.035) excess += (planKg > 0 ? planKg * buyPrice : totalWaste * 0.18) * ((planAct - 0.035)/planAct);
+        if (mktAct > 0.0004) excess += (mktKg > 0 ? mktKg * buyPrice : totalWaste * 0.01) * ((mktAct - 0.0004)/mktAct);
+        if (fgLtsAct > 0.0002) excess += (fgLtsKg > 0 ? fgLtsKg * buyPrice : totalWaste * 0.01) * ((fgLtsAct - 0.0002)/fgLtsAct);
+
+        const record = {
+          week: parseInt(document.getElementById('inputWeek').value),
+          date: document.getElementById('inputDate').value,
+          month: parseInt(document.getElementById('inputMonth').value),
+          year: parseInt(document.getElementById('inputYear').value),
+          buyTarget: 18.3,
+          buyActual: buyPrice,
+          buyKg: buyKg,
+          sellTarget: 25.7,
+          sellActual: sellPrice,
+          sellKg: sellKg,
+          paperCostTarget: 0.7902,
+          paperCostActual: parseFloat(document.getElementById('inputPaperCost').value),
+          wasteProdTarget: 0.05,
+          wasteProdActual: prodAct,
+          wasteProdVal: prodKg > 0 ? Math.round(prodKg * buyPrice * 100)/100 : totalWaste * 0.22,
+          wasteProdKg: prodKg > 0 ? prodKg : Math.round(totalKg * 0.23),
+          wastePlanTarget: 0.035,
+          wastePlanActual: planAct,
+          wastePlanVal: planKg > 0 ? Math.round(planKg * buyPrice * 100)/100 : totalWaste * 0.17,
+          wastePlanKg: planKg > 0 ? planKg : Math.round(totalKg * 0.17),
+          wasteRMTarget: 0.0158,
+          wasteRMActual: rmAct,
+          wasteRMVal: rmKg > 0 ? Math.round(rmKg * buyPrice * 100)/100 : totalWaste * 0.10,
+          wasteRMKg: rmKg > 0 ? rmKg : Math.round(totalKg * 0.11),
+          wasteMktTarget: 0.0004,
+          wasteMktActual: mktAct,
+          wasteMktVal: mktKg > 0 ? Math.round(mktKg * buyPrice * 100)/100 : Math.round(totalWaste * 0.001 * 100)/100,
+          wasteMktKg: mktKg,
+          wasteFGLTSTarget: 0.0002,
+          wasteFGLTSActual: fgLtsAct,
+          wasteFGLTSVal: fgLtsKg > 0 ? Math.round(fgLtsKg * buyPrice * 100)/100 : Math.round(totalWaste * 0.001 * 100)/100,
+          wasteFGLTSKg: fgLtsKg,
+          diffWasteTarget: 0.0086,
+          diffWasteActual: diffAct,
+          diffWasteVal: diffKg > 0 ? Math.round(diffKg * buyPrice * 100)/100 : totalWaste * 0.48,
+          diffWasteKg: diffKg > 0 ? diffKg : Math.round(totalKg * 0.49),
+          totalWasteVal: totalWaste,
+          totalExcessVal: Math.round(excess),
+          totalWasteKg: totalKg,
+          excessCount: (prodAct>0.05?1:0) + (planAct>0.035?1:0) + (rmAct>0.0158?1:0) + (diffAct>0.0086?1:0) + (mktAct>0.0004?1:0) + (fgLtsAct>0.0002?1:0)
+        };
+
+        if (editIdx >= 0) {
+          dataset[editIdx] = record;
+        } else {
+          dataset.push(record);
+        }
+
+        dataset.sort((a, b) => a.week - b.week);
+        await saveDataset();
+        closeModal('addModal');
+        initApp();
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'บันทึกข้อมูลขึ้น Cloud';
       }
+    };
 
-      let totalWaste = parseFloat(document.getElementById('inputTotalWasteVal').value);
-      if (!totalWaste || isNaN(totalWaste)) {
-        totalWaste = Math.round((totalKg * buyPrice) * 100) / 100;
-      }
-
-      let excess = 0;
-      if (diffAct > 0.0086) excess += (diffKg > 0 ? diffKg * buyPrice : totalWaste * 0.45) * ((diffAct - 0.0086)/diffAct);
-      if (rmAct > 0.0158) excess += (rmKg > 0 ? rmKg * buyPrice : totalWaste * 0.15) * ((rmAct - 0.0158)/rmAct);
-      if (prodAct > 0.05) excess += (prodKg > 0 ? prodKg * buyPrice : totalWaste * 0.20) * ((prodAct - 0.05)/prodAct);
-      if (planAct > 0.035) excess += (planKg > 0 ? planKg * buyPrice : totalWaste * 0.18) * ((planAct - 0.035)/planAct);
-      if (mktAct > 0.0004) excess += (mktKg > 0 ? mktKg * buyPrice : totalWaste * 0.01) * ((mktAct - 0.0004)/mktAct);
-      if (fgLtsAct > 0.0002) excess += (fgLtsKg > 0 ? fgLtsKg * buyPrice : totalWaste * 0.01) * ((fgLtsAct - 0.0002)/fgLtsAct);
-
-      const record = {
-        week: parseInt(document.getElementById('inputWeek').value),
-        date: document.getElementById('inputDate').value,
-        month: parseInt(document.getElementById('inputMonth').value),
-        year: parseInt(document.getElementById('inputYear').value),
-        buyTarget: 18.3,
-        buyActual: buyPrice,
-        buyKg: buyKg,
-        sellTarget: 25.7,
-        sellActual: sellPrice,
-        sellKg: sellKg,
-        paperCostTarget: 0.7902,
-        paperCostActual: parseFloat(document.getElementById('inputPaperCost').value),
-        wasteProdTarget: 0.05,
-        wasteProdActual: prodAct,
-        wasteProdVal: prodKg > 0 ? Math.round(prodKg * buyPrice * 100)/100 : totalWaste * 0.22,
-        wasteProdKg: prodKg > 0 ? prodKg : Math.round(totalKg * 0.23),
-        wastePlanTarget: 0.035,
-        wastePlanActual: planAct,
-        wastePlanVal: planKg > 0 ? Math.round(planKg * buyPrice * 100)/100 : totalWaste * 0.17,
-        wastePlanKg: planKg > 0 ? planKg : Math.round(totalKg * 0.17),
-        wasteRMTarget: 0.0158,
-        wasteRMActual: rmAct,
-        wasteRMVal: rmKg > 0 ? Math.round(rmKg * buyPrice * 100)/100 : totalWaste * 0.10,
-        wasteRMKg: rmKg > 0 ? rmKg : Math.round(totalKg * 0.11),
-        wasteMktTarget: 0.0004,
-        wasteMktActual: mktAct,
-        wasteMktVal: mktKg > 0 ? Math.round(mktKg * buyPrice * 100)/100 : Math.round(totalWaste * 0.001 * 100)/100,
-        wasteMktKg: mktKg,
-        wasteFGLTSTarget: 0.0002,
-        wasteFGLTSActual: fgLtsAct,
-        wasteFGLTSVal: fgLtsKg > 0 ? Math.round(fgLtsKg * buyPrice * 100)/100 : Math.round(totalWaste * 0.001 * 100)/100,
-        wasteFGLTSKg: fgLtsKg,
-        diffWasteTarget: 0.0086,
-        diffWasteActual: diffAct,
-        diffWasteVal: diffKg > 0 ? Math.round(diffKg * buyPrice * 100)/100 : totalWaste * 0.48,
-        diffWasteKg: diffKg > 0 ? diffKg : Math.round(totalKg * 0.49),
-        totalWasteVal: totalWaste,
-        totalExcessVal: Math.round(excess),
-        totalWasteKg: totalKg,
-        excessCount: (prodAct>0.05?1:0) + (planAct>0.035?1:0) + (rmAct>0.0158?1:0) + (diffAct>0.0086?1:0) + (mktAct>0.0004?1:0) + (fgLtsAct>0.0002?1:0)
-      };
-
-      if (editIdx >= 0) {
-        dataset[editIdx] = record;
-      } else {
-        dataset.push(record);
-      }
-
-      dataset.sort((a, b) => a.week - b.week);
-      saveDataset();
-      closeModal('addModal');
-      initApp();
-    }
-
-    // EXPORT TO CSV
-    function exportCSV() {
+    window.exportCSV = function() {
       let csv = "Week,Date,Month,Year,BuyPriceActual,SellPriceActual,PaperCostActual,WasteProdActual,WastePlanActual,WasteRMActual,DiffWasteActual,TotalWasteVal,TotalExcessVal,TotalWasteKg\n";
       dataset.forEach(r => {
         csv += `${r.week},"${r.date}",${r.month},${r.year},${r.buyActual},${r.sellActual},${r.paperCostActual},${r.wasteProdActual},${r.wastePlanActual},${r.wasteRMActual},${r.diffWasteActual},${r.totalWasteVal},${r.totalExcessVal},${r.totalWasteKg}\n`;
@@ -1732,9 +1771,8 @@
       a.href = url;
       a.download = `PaperCost_Report_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
-    }
+    };
 
-    // MONTH NAMES IN THAI
     const MONTH_NAMES = [
       "", "มกราคม (ม.ค.)", "กุมภาพันธ์ (ก.พ.)", "มีนาคม (มี.ค.)", "เมษายน (เม.ย.)",
       "พฤษภาคม (พ.ค.)", "มิถุนายน (มิ.ย.)", "กรกฎาคม (ก.ค.)", "สิงหาคม (ส.ค.)",
@@ -1747,7 +1785,6 @@
     function populateMonthSelector() {
       const select = document.getElementById('monthlyMonthSelect');
       if (!select) return;
-      // Extract unique months present in dataset
       const months = [...new Set(dataset.map(d => d.month))].sort((a,b) => a - b);
       if (months.length === 0) months.push(10);
       
@@ -1757,7 +1794,7 @@
       `).join('');
     }
 
-    function renderMonthlySummary() {
+    window.renderMonthlySummary = function() {
       const select = document.getElementById('monthlyMonthSelect');
       const selectedMonth = parseInt(select ? select.value : 10) || 10;
       const monthRows = dataset.filter(d => d.month === selectedMonth);
@@ -1772,20 +1809,18 @@
         return;
       }
 
-      // Calculate Averages and Sums
       const avgBuy = monthRows.reduce((s, r) => s + r.buyActual, 0) / n;
       const avgSell = monthRows.reduce((s, r) => s + r.sellActual, 0) / n;
       const avgPC = monthRows.reduce((s, r) => s + r.paperCostActual, 0) / n;
       const avgProd = monthRows.reduce((s, r) => s + r.wasteProdActual, 0) / n;
       const avgPlan = monthRows.reduce((s, r) => s + r.wastePlanActual, 0) / n;
       const avgRM = monthRows.reduce((s, r) => s + r.wasteRMActual, 0) / n;
-      const avgMkt = monthRows.reduce((s, r) => s + r.wasteMktActual, 0) / n;
+      const avgMkt = monthRows.reduce((s, r) => s + (r.wasteMktActual || 0), 0) / n;
       const avgDiff = monthRows.reduce((s, r) => s + r.diffWasteActual, 0) / n;
       const avgFGLTS = monthRows.reduce((s, r) => s + (r.wasteFGLTSActual || 0), 0) / n;
 
-      // รวม % Waste เฉลี่ย (Prod + Plan + RM + Mkt + Diff + FG+LTS)
       const avgTotalWasteRate = avgProd + avgPlan + avgRM + avgMkt + avgDiff + avgFGLTS;
-      const targetTotalWasteRate = 0.05 + 0.035 + 0.0158 + 0.0004 + 0.0086 + 0.0002; // 0.1100 หรือ 11.00%
+      const targetTotalWasteRate = 0.05 + 0.035 + 0.0158 + 0.0004 + 0.0086 + 0.0002;
 
       const sumProdVal = monthRows.reduce((s, r) => s + (r.wasteProdVal || 0), 0);
       const sumPlanVal = monthRows.reduce((s, r) => s + (r.wastePlanVal || 0), 0);
@@ -1797,7 +1832,6 @@
       const sumTotalWaste = monthRows.reduce((s, r) => s + (r.totalWasteVal || 0), 0);
       const sumTotalExcess = monthRows.reduce((s, r) => s + (r.totalExcessVal || 0), 0);
 
-      // Top mini KPI cards
       document.getElementById('monKpiBuy').innerText = avgBuy.toFixed(2) + ' ฿';
       document.getElementById('monKpiBuyStatus').innerHTML = `เป้า 18.30 ฿ (${avgBuy <= 18.30 ? 'ต่ำกว่าเป้า ✓' : 'สูงกว่าเป้า ✕'})`;
       
@@ -1807,7 +1841,6 @@
       document.getElementById('monKpiPC').innerText = (avgPC * 100).toFixed(2) + '%';
       document.getElementById('monKpiPCStatus').innerHTML = `เป้า 79.02% (${avgPC <= 0.7902 ? 'ต่ำกว่าเป้า ✓' : 'สูงกว่าเป้า ✕'})`;
       
-      // เพิ่มแสดง % Waste เฉลี่ย ต่อท้าย % Paper Cost
       if (document.getElementById('monKpiWastePct')) {
         document.getElementById('monKpiWastePct').innerText = (avgTotalWasteRate * 100).toFixed(2) + '%';
         const isWasteOver = avgTotalWasteRate > targetTotalWasteRate;
@@ -1819,7 +1852,6 @@
         document.getElementById('monKpiWasteTotalVal').innerText = `ของเสียรวม ${fmtMoney(sumTotalWaste)}`;
       }
 
-      // Target definitions
       const monTopics = [
         { name: '1. ราคาซื้อ / จัดซื้อ', owner: 'ภัทร / พลอย', target: 18.30, avg: avgBuy, isPct: false, lowerBetter: true, totalVal: 0, excessVal: 0 },
         { name: '2. ราคาขาย / ตลาด', owner: 'พี่หญิง / เนย', target: 25.70, avg: avgSell, isPct: false, lowerBetter: false, totalVal: 0, excessVal: 0 },
@@ -1870,7 +1902,7 @@
       `;
 
       document.getElementById('monthlyOverCountBadge').innerText = `เกินเป้าเฉลี่ย ${overCount} หัวข้อ`;
-    }
+    };
 
     function renderYearMatrix() {
       const tbody = document.getElementById('yearMatrixTableBody');
@@ -1963,7 +1995,7 @@
       lucide.createIcons();
     }
 
-    window.onload = initApp;
+    window.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
